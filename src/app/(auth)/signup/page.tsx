@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Zap, Mail, Lock, User, Eye, EyeOff, Mic, Building2 } from 'lucide-react'
@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 
 type UserRole = 'comedian' | 'venue'
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialRole = searchParams.get('role') as UserRole || 'comedian'
@@ -222,6 +222,18 @@ export default function SignupPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#7B2FF7]"></div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   )
 }
 
