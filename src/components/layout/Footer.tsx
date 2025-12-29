@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Zap, Instagram, Twitter, Youtube } from 'lucide-react'
+import { Instagram, Twitter, Youtube } from 'lucide-react'
+import Logo from '@/components/ui/Logo'
 
 const footerLinks = {
   platform: [
@@ -38,7 +39,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <Zap className="w-7 h-7 text-[#7B2FF7]" />
+              <Logo size={28} />
               <span className="text-lg font-bold bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B] bg-clip-text text-transparent">
                 NovaActa
               </span>

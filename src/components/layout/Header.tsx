@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Zap, User, LogOut } from 'lucide-react'
+import { Menu, X, User, LogOut } from 'lucide-react'
 import Button from '@/components/ui/Button'
+import Logo from '@/components/ui/Logo'
 
 const navLinks = [
   { href: '/open-mics', label: 'Open Mics' },
@@ -30,8 +31,8 @@ export default function Header({ user }: HeaderProps) {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="relative">
-              <Zap className="w-8 h-8 text-[#7B2FF7] group-hover:text-[#F72585] transition-colors" />
-              <div className="absolute inset-0 blur-lg bg-[#7B2FF7]/40 group-hover:bg-[#F72585]/40 transition-colors" />
+              <Logo size={32} />
+              <div className="absolute inset-0 blur-lg bg-[#7B2FF7]/30 group-hover:bg-[#F72585]/30 transition-colors" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B] bg-clip-text text-transparent">
               NovaActa

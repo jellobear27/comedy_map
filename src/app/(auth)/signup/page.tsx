@@ -3,9 +3,10 @@
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Zap, Mail, Lock, User, Eye, EyeOff, Mic, Building2 } from 'lucide-react'
+import { Mail, Lock, User, Eye, EyeOff, Mic, Building2 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import Logo from '@/components/ui/Logo'
 import { createClient } from '@/lib/supabase/client'
 
 type UserRole = 'comedian' | 'venue'
@@ -62,8 +63,8 @@ function SignupForm() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <Zap className="w-10 h-10 text-[#7B2FF7]" />
+          <Link href="/" className="inline-flex items-center gap-3">
+            <Logo size={40} />
             <span className="text-2xl font-bold bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B] bg-clip-text text-transparent">
               NovaActa
             </span>
