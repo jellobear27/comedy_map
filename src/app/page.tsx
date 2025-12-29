@@ -33,7 +33,7 @@ const features = [
 
 const testimonials = [
   {
-    quote: "ComedyMap helped me find 15 open mics in my first week. I'm performing more than ever!",
+    quote: "NovaActa helped me find 15 open mics in my first week. I'm performing more than ever!",
     author: "Sarah K.",
     role: "Comedian, NYC",
     avatar: "SK",

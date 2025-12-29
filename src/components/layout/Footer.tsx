@@ -40,11 +40,11 @@ export default function Footer() {
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Zap className="w-7 h-7 text-[#7B2FF7]" />
               <span className="text-lg font-bold bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B] bg-clip-text text-transparent">
-                ComedyMap
+                NovaActa
               </span>
             </Link>
             <p className="text-[#A0A0A0] text-sm mb-6 max-w-xs">
-              The ultimate platform for comedians to learn, connect, and find their next stage.
+              Built for comics. Backed by community.
             </p>
             <div className="flex gap-4">
               <a href="#" className="text-[#A0A0A0] hover:text-[#7B2FF7] transition-colors">
@@ -115,7 +115,7 @@ export default function Footer() {
 
         <div className="mt-12 pt-8 border-t border-[#7B2FF7]/10 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-[#A0A0A0]">
-            © {new Date().getFullYear()} ComedyMap. All rights reserved.
+            © {new Date().getFullYear()} NovaActa. All rights reserved.
           </p>
           <p className="text-sm text-[#A0A0A0]">
             Made with ⚡ for comedians everywhere

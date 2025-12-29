@@ -34,7 +34,7 @@ export default function Header({ user }: HeaderProps) {
               <div className="absolute inset-0 blur-lg bg-[#7B2FF7]/40 group-hover:bg-[#F72585]/40 transition-colors" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B] bg-clip-text text-transparent">
-              ComedyMap
+              NovaActa
             </span>
           </Link>
 

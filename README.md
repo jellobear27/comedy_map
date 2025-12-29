@@ -1,8 +1,10 @@
-# 🎤 ComedyMap
+# ⚡ NovaActa
 
-**The ultimate platform for comedians to discover open mics, learn from courses, and connect with the comedy community across the USA.**
+**Built for comics. Backed by community.**
 
-![ComedyMap](https://via.placeholder.com/1200x630/7B2FF7/FFFFFF?text=ComedyMap)
+The ultimate platform for comedians to discover open mics, learn from courses, and connect with the comedy community across the USA.
+
+![NovaActa](https://via.placeholder.com/1200x630/7B2FF7/FFFFFF?text=NovaActa)
 
 ## ✨ Features
 
@@ -30,7 +32,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/comedy_map.git
+   git clone https://github.com/jellobear27/comedy_map.git
    cd comedy_map
    ```
 
@@ -112,7 +114,7 @@ comedy_map/
 
 ## 🎨 Design System
 
-ComedyMap features a stunning electric gradient-based design:
+NovaActa features a stunning electric gradient-based design:
 
 ### Colors
 - **Electric Violet**: `#7B2FF7`
@@ -134,7 +136,7 @@ ComedyMap features a stunning electric gradient-based design:
 
 ## 🔐 Authentication
 
-ComedyMap uses Supabase Auth with support for:
+NovaActa uses Supabase Auth with support for:
 - Email/Password authentication
 - OAuth (Google, GitHub)
 - Magic links

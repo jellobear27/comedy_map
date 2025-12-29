@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
             currency: 'usd',
             product_data: {
               name: courseTitle,
-              description: 'ComedyMap Course Enrollment',
+              description: 'NovaActa Course Enrollment',
             },
             unit_amount: Math.round(price * 100), // Convert to cents
           },

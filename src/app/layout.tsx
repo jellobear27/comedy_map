@@ -16,9 +16,9 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "ComedyMap - Find Open Mics, Courses & Community for Comedians",
+  title: "NovaActa - Built for Comics. Backed by Community.",
   description: "The ultimate platform for comedians to discover open mics, learn from courses, connect with the comedy community, and plan tours across the USA.",
-  keywords: ["comedy", "open mic", "stand-up", "comedian", "comedy courses", "comedy community"],
+  keywords: ["comedy", "open mic", "stand-up", "comedian", "comedy courses", "comedy community", "NovaActa"],
 }
 
 export default function RootLayout({

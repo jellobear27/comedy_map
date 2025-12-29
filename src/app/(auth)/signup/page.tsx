@@ -65,7 +65,7 @@ function SignupForm() {
           <Link href="/" className="inline-flex items-center gap-2">
             <Zap className="w-10 h-10 text-[#7B2FF7]" />
             <span className="text-2xl font-bold bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B] bg-clip-text text-transparent">
-              ComedyMap
+              NovaActa
             </span>
           </Link>
         </div>
