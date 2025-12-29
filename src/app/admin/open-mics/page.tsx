@@ -258,9 +258,13 @@ export default function AdminOpenMicsPage() {
           day_of_week: DAYS_OF_WEEK.find(d => 
             d.label.toLowerCase() === String(entry['day'] || entry['day_of_week'] || '').toLowerCase()
           )?.value || 0,
+          week_of_month: WEEKS_OF_MONTH.find(w =>
+            w.label.toLowerCase() === String(entry['week'] || entry['week_of_month'] || '').toLowerCase()
+          )?.value || 0,
           start_time: String(entry['start_time'] || entry['time'] || '20:00'),
           end_time: String(entry['end_time'] || ''),
           frequency: (entry['frequency'] as OpenMicFormData['frequency']) || 'weekly',
+          event_type: (entry['event_type'] as OpenMicFormData['event_type']) || 'open-mic',
           signup_type: (entry['signup_type'] as OpenMicFormData['signup_type']) || 'list',
           time_per_comic: Number(entry['time_per_comic']) || 5,
           cover_charge: Number(entry['cover_charge'] || entry['cover']) || 0,
@@ -296,15 +300,21 @@ export default function AdminOpenMicsPage() {
         state: item.state,
         zip_code: item.zip_code,
         day_of_week: item.day_of_week,
+        week_of_month: item.week_of_month,
         start_time: item.start_time,
         end_time: item.end_time || null,
         frequency: item.frequency,
+        event_type: item.event_type,
         signup_type: item.signup_type,
         time_per_comic: item.time_per_comic,
         cover_charge: item.cover_charge,
         drink_minimum: item.drink_minimum,
         parking_info: item.parking_info || null,
         notes: item.notes || null,
+        venue_name: item.venue_name || null,
+        host_name: item.host_name || null,
+        contact_email: item.contact_email || null,
+        website: item.website || null,
         is_active: true,
       }))
 
