@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, MapPin, Calendar, Clock, Filter, ChevronDown, Star, Users } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Search, MapPin, Calendar, Clock, Filter, ChevronDown, Star, Users, Plus } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
@@ -327,9 +329,12 @@ export default function OpenMicsPage() {
           <p className="text-[#A0A0A0] mb-8">
             Help the comedy community by submitting open mics in your area.
           </p>
-          <Button variant="secondary">
-            Submit an Open Mic
-          </Button>
+          <Link href="/submit-open-mic">
+            <Button variant="secondary">
+              <Plus className="w-4 h-4 mr-2" />
+              Submit an Open Mic
+            </Button>
+          </Link>
         </div>
       </section>
     </div>
