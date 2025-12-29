@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Search, MapPin, Calendar, Clock, Filter, ChevronDown, Star, Users, Plus } from 'lucide-react'
+import { Search, MapPin, Calendar, Clock, Filter, ChevronDown, Star, Users, Plus, Mic, Theater, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -12,99 +12,49 @@ import { US_STATES } from '@/types'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-// Mock data for demonstration
-const mockOpenMics = [
-  {
-    id: '1',
-    name: 'The Comedy Store Open Mic',
-    venue_name: 'The Comedy Store',
-    address: '8433 Sunset Blvd',
-    city: 'Los Angeles',
-    state: 'CA',
-    day_of_week: 1,
-    start_time: '20:00',
-    signup_type: 'list',
-    time_per_comic: 5,
-    cover_charge: 0,
-    rating: 4.8,
-    reviews_count: 124,
-  },
-  {
-    id: '2',
-    name: 'Gotham Comedy Club New Talent',
-    venue_name: 'Gotham Comedy Club',
-    address: '208 W 23rd St',
-    city: 'New York',
-    state: 'NY',
-    day_of_week: 2,
-    start_time: '19:00',
-    signup_type: 'online',
-    time_per_comic: 4,
-    cover_charge: 5,
-    rating: 4.9,
-    reviews_count: 89,
-  },
-  {
-    id: '3',
-    name: 'The Laugh Factory Open Mic Night',
-    venue_name: 'The Laugh Factory',
-    address: '3175 N Broadway',
-    city: 'Chicago',
-    state: 'IL',
-    day_of_week: 3,
-    start_time: '21:00',
-    signup_type: 'bucket',
-    time_per_comic: 5,
-    cover_charge: 0,
-    rating: 4.7,
-    reviews_count: 56,
-  },
-  {
-    id: '4',
-    name: 'Helium Comedy Club Rising Stars',
-    venue_name: 'Helium Comedy Club',
-    address: '2031 Sansom St',
-    city: 'Philadelphia',
-    state: 'PA',
-    day_of_week: 4,
-    start_time: '19:30',
-    signup_type: 'first-come',
-    time_per_comic: 6,
-    cover_charge: 10,
-    rating: 4.6,
-    reviews_count: 42,
-  },
-  {
-    id: '5',
-    name: 'Cap City Comedy Club Open Stage',
-    venue_name: 'Cap City Comedy Club',
-    address: '8120 Research Blvd',
-    city: 'Austin',
-    state: 'TX',
-    day_of_week: 0,
-    start_time: '18:00',
-    signup_type: 'list',
-    time_per_comic: 5,
-    cover_charge: 0,
-    rating: 4.8,
-    reviews_count: 78,
-  },
-  {
-    id: '6',
-    name: 'The Ice House Comedy Playground',
-    venue_name: 'The Ice House',
-    address: '24 N Mentor Ave',
-    city: 'Pasadena',
-    state: 'CA',
-    day_of_week: 5,
-    start_time: '20:30',
-    signup_type: 'online',
-    time_per_comic: 5,
-    cover_charge: 5,
-    rating: 4.7,
-    reviews_count: 93,
-  },
+const WEEKS_OF_MONTH = [
+  { value: 0, label: 'Every Week' },
+  { value: 1, label: '1st Week' },
+  { value: 2, label: '2nd Week' },
+  { value: 3, label: '3rd Week' },
+  { value: 4, label: '4th Week' },
+  { value: 5, label: '5th Week' },
 ]
+
+const EVENT_TYPES = [
+  { value: 'open-mic', label: 'Open Mic', icon: Mic },
+  { value: 'show', label: 'Show', icon: Theater },
+]
+
+// Cities by state - will be populated from data
+const CITIES_BY_STATE: Record<string, string[]> = {
+  CO: ['Arvada', 'Aurora', 'Boulder', 'Broomfield', 'Colorado Springs', 'Denver', 'Englewood', 'Fort Collins', 'Greeley', 'Lakewood', 'Littleton', 'Longmont', 'Loveland', 'Wellington', 'Westminster', 'Wheat Ridge'],
+  CA: ['Los Angeles', 'San Francisco', 'San Diego', 'Sacramento', 'Oakland', 'Pasadena', 'Long Beach', 'Irvine', 'Santa Monica'],
+  NY: ['New York', 'Brooklyn', 'Queens', 'Bronx', 'Buffalo', 'Rochester', 'Albany'],
+  TX: ['Austin', 'Houston', 'Dallas', 'San Antonio', 'Fort Worth', 'El Paso'],
+  IL: ['Chicago', 'Aurora', 'Naperville', 'Joliet', 'Rockford'],
+  // Add more states as needed
+}
+
+interface OpenMicData {
+  id: string
+  name: string
+  venue_name?: string
+  address: string
+  city: string
+  state: string
+  day_of_week: number
+  week_of_month?: number // 0 = every week, 1-5 = specific week
+  start_time: string
+  signup_type: string
+  event_type?: 'open-mic' | 'show'
+  time_per_comic?: number
+  cover_charge?: number
+  rating?: number
+  reviews_count?: number
+  frequency?: string
+  is_active?: boolean
+}
 
 const signupTypeLabels: Record<string, string> = {
   'first-come': 'First Come',
@@ -114,26 +64,112 @@ const signupTypeLabels: Record<string, string> = {
 }
 
 export default function OpenMicsPage() {
+  const [openMics, setOpenMics] = useState<OpenMicData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedState, setSelectedState] = useState('')
+  const [selectedCity, setSelectedCity] = useState('')
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [showFilters, setShowFilters] = useState(false)
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null)
+  const [selectedEventType, setSelectedEventType] = useState<string>('')
+  const [showFilters, setShowFilters] = useState(true)
 
-  const filteredMics = mockOpenMics.filter((mic) => {
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      if (
-        !mic.name.toLowerCase().includes(query) &&
-        !mic.city.toLowerCase().includes(query) &&
-        !mic.venue_name.toLowerCase().includes(query)
-      ) {
-        return false
+  // Load open mics from Supabase
+  useEffect(() => {
+    const loadOpenMics = async () => {
+      setIsLoading(true)
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('open_mics')
+        .select('*')
+        .eq('is_active', true)
+        .order('day_of_week', { ascending: true })
+      
+      if (!error && data) {
+        setOpenMics(data as OpenMicData[])
       }
+      setIsLoading(false)
     }
-    if (selectedState && mic.state !== selectedState) return false
-    if (selectedDay !== null && mic.day_of_week !== selectedDay) return false
-    return true
-  })
+    loadOpenMics()
+  }, [])
+
+  // Get available cities based on selected state
+  const availableCities = useMemo(() => {
+    if (!selectedState) return []
+    
+    // First check our predefined list
+    if (CITIES_BY_STATE[selectedState]) {
+      return CITIES_BY_STATE[selectedState]
+    }
+    
+    // Otherwise, get unique cities from the data
+    const citiesFromData = [...new Set(
+      openMics
+        .filter(mic => mic.state === selectedState)
+        .map(mic => mic.city)
+    )].sort()
+    
+    return citiesFromData
+  }, [selectedState, openMics])
+
+  // Reset city when state changes
+  useEffect(() => {
+    setSelectedCity('')
+  }, [selectedState])
+
+  // Filter open mics
+  const filteredMics = useMemo(() => {
+    return openMics.filter((mic) => {
+      // Search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        if (
+          !mic.name.toLowerCase().includes(query) &&
+          !mic.city.toLowerCase().includes(query) &&
+          !(mic.venue_name?.toLowerCase().includes(query))
+        ) {
+          return false
+        }
+      }
+      // State filter
+      if (selectedState && mic.state !== selectedState) return false
+      // City filter
+      if (selectedCity && mic.city !== selectedCity) return false
+      // Day of week filter
+      if (selectedDay !== null && mic.day_of_week !== selectedDay) return false
+      // Week of month filter
+      if (selectedWeek !== null) {
+        // 0 means "every week" - show all weekly mics
+        if (selectedWeek === 0) {
+          if (mic.week_of_month && mic.week_of_month !== 0) return false
+        } else {
+          if (mic.week_of_month !== selectedWeek && mic.week_of_month !== 0) return false
+        }
+      }
+      // Event type filter
+      if (selectedEventType && mic.event_type !== selectedEventType) return false
+      
+      return true
+    })
+  }, [openMics, searchQuery, selectedState, selectedCity, selectedDay, selectedWeek, selectedEventType])
+
+  // Count active filters
+  const activeFilterCount = [
+    selectedState,
+    selectedCity,
+    selectedDay !== null,
+    selectedWeek !== null,
+    selectedEventType,
+  ].filter(Boolean).length
+
+  const clearAllFilters = () => {
+    setSelectedState('')
+    setSelectedCity('')
+    setSelectedDay(null)
+    setSelectedWeek(null)
+    setSelectedEventType('')
+    setSearchQuery('')
+  }
 
   return (
     <div className="min-h-screen">
@@ -158,7 +194,7 @@ export default function OpenMicsPage() {
           </div>
 
           {/* Search Bar */}
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <div className="flex gap-4">
               <div className="flex-1">
                 <Input
@@ -175,14 +211,53 @@ export default function OpenMicsPage() {
               >
                 <Filter className="w-5 h-5" />
                 Filters
+                {activeFilterCount > 0 && (
+                  <span className="ml-1 px-2 py-0.5 bg-[#7B2FF7] text-white text-xs rounded-full">
+                    {activeFilterCount}
+                  </span>
+                )}
                 <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
               </Button>
             </div>
 
-            {/* Filters Panel */}
+            {/* Enhanced Filters Panel */}
             {showFilters && (
               <Card variant="glass" className="mt-4 p-6">
-                <div className="grid md:grid-cols-2 gap-6">
+                {/* Event Type Toggle */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-[#A0A0A0] mb-3">
+                    Event Type
+                  </label>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setSelectedEventType(selectedEventType === '' ? '' : '')}
+                      className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                        selectedEventType === ''
+                          ? 'border-[#7B2FF7] bg-[#7B2FF7]/10 text-white'
+                          : 'border-[#7B2FF7]/20 text-[#A0A0A0] hover:border-[#7B2FF7]/50'
+                      }`}
+                    >
+                      All Events
+                    </button>
+                    {EVENT_TYPES.map((type) => (
+                      <button
+                        key={type.value}
+                        onClick={() => setSelectedEventType(selectedEventType === type.value ? '' : type.value)}
+                        className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+                          selectedEventType === type.value
+                            ? 'border-[#7B2FF7] bg-[#7B2FF7]/10 text-white'
+                            : 'border-[#7B2FF7]/20 text-[#A0A0A0] hover:border-[#7B2FF7]/50'
+                        }`}
+                      >
+                        <type.icon className="w-4 h-4" />
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Location Filters */}
+                <div className="grid md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <label className="block text-sm font-medium text-[#A0A0A0] mb-2">
                       State
@@ -202,6 +277,29 @@ export default function OpenMicsPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-[#A0A0A0] mb-2">
+                      City
+                      {!selectedState && <span className="text-[#7B2FF7]/50 ml-2">(select state first)</span>}
+                    </label>
+                    <select
+                      value={selectedCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      disabled={!selectedState}
+                      className="w-full bg-[#1A0033]/30 border border-[#7B2FF7]/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#7B2FF7] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="">All Cities</option>
+                      {availableCities.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Time Filters */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-[#A0A0A0] mb-2">
                       Day of Week
                     </label>
                     <select
@@ -217,19 +315,79 @@ export default function OpenMicsPage() {
                       ))}
                     </select>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#A0A0A0] mb-2">
+                      Week of Month
+                    </label>
+                    <select
+                      value={selectedWeek ?? ''}
+                      onChange={(e) => setSelectedWeek(e.target.value ? parseInt(e.target.value) : null)}
+                      className="w-full bg-[#1A0033]/30 border border-[#7B2FF7]/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#7B2FF7]"
+                    >
+                      <option value="">Any Week</option>
+                      {WEEKS_OF_MONTH.map((week) => (
+                        <option key={week.value} value={week.value}>
+                          {week.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div className="flex justify-end mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedState('')
-                      setSelectedDay(null)
-                    }}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
+
+                {/* Active Filters & Clear */}
+                {activeFilterCount > 0 && (
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#7B2FF7]/20">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedState && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#7B2FF7]/20 text-[#7B2FF7] rounded-full text-sm">
+                          {US_STATES.find(s => s.value === selectedState)?.label}
+                          <button onClick={() => setSelectedState('')} className="hover:text-white">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {selectedCity && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#F72585]/20 text-[#F72585] rounded-full text-sm">
+                          {selectedCity}
+                          <button onClick={() => setSelectedCity('')} className="hover:text-white">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {selectedDay !== null && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#00F5D4]/20 text-[#00F5D4] rounded-full text-sm">
+                          {DAYS[selectedDay]}
+                          <button onClick={() => setSelectedDay(null)} className="hover:text-white">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {selectedWeek !== null && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#FFB627]/20 text-[#FFB627] rounded-full text-sm">
+                          {WEEKS_OF_MONTH.find(w => w.value === selectedWeek)?.label}
+                          <button onClick={() => setSelectedWeek(null)} className="hover:text-white">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {selectedEventType && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#7B2FF7]/20 text-[#7B2FF7] rounded-full text-sm">
+                          {EVENT_TYPES.find(t => t.value === selectedEventType)?.label}
+                          <button onClick={() => setSelectedEventType('')} className="hover:text-white">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearAllFilters}
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                )}
               </Card>
             )}
           </div>
@@ -241,80 +399,124 @@ export default function OpenMicsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <p className="text-[#A0A0A0]">
-              Showing <span className="text-white font-medium">{filteredMics.length}</span> open mics
+              {isLoading ? (
+                'Loading...'
+              ) : (
+                <>
+                  Showing <span className="text-white font-medium">{filteredMics.length}</span> open mics
+                  {selectedState && ` in ${US_STATES.find(s => s.value === selectedState)?.label}`}
+                  {selectedCity && ` • ${selectedCity}`}
+                </>
+              )}
             </p>
             <select className="bg-[#1A0033]/30 border border-[#7B2FF7]/30 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7B2FF7]">
-              <option>Sort by Relevance</option>
-              <option>Sort by Rating</option>
               <option>Sort by Day</option>
               <option>Sort by City</option>
+              <option>Sort by Name</option>
             </select>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMics.map((mic) => (
-              <Card key={mic.id} variant="gradient" className="group cursor-pointer">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-white group-hover:text-[#7B2FF7] transition-colors">
-                      {mic.name}
-                    </h3>
-                    <p className="text-sm text-[#A0A0A0]">{mic.venue_name}</p>
-                  </div>
-                  <Badge variant="success" size="sm">
-                    {signupTypeLabels[mic.signup_type]}
-                  </Badge>
+          {isLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-[#1A0033]/40 rounded-2xl p-6 animate-pulse">
+                  <div className="h-6 bg-[#7B2FF7]/20 rounded mb-4 w-3/4"></div>
+                  <div className="h-4 bg-[#7B2FF7]/10 rounded mb-2 w-1/2"></div>
+                  <div className="h-4 bg-[#7B2FF7]/10 rounded mb-2 w-2/3"></div>
+                  <div className="h-4 bg-[#7B2FF7]/10 rounded w-1/3"></div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredMics.map((mic) => (
+                <Card key={mic.id} variant="gradient" className="group cursor-pointer hover:border-[#7B2FF7]/50 transition-all">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="font-semibold text-white group-hover:text-[#7B2FF7] transition-colors">
+                        {mic.name}
+                      </h3>
+                      {mic.venue_name && (
+                        <p className="text-sm text-[#A0A0A0]">{mic.venue_name}</p>
+                      )}
+                    </div>
+                    <Badge variant="success" size="sm">
+                      {signupTypeLabels[mic.signup_type] || mic.signup_type}
+                    </Badge>
+                  </div>
 
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-[#A0A0A0]">
-                    <MapPin className="w-4 h-4 text-[#7B2FF7]" />
-                    <span>{mic.city}, {mic.state}</span>
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-2 text-sm text-[#A0A0A0]">
+                      <MapPin className="w-4 h-4 text-[#7B2FF7]" />
+                      <span>{mic.city}, {mic.state}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-[#A0A0A0]">
+                      <Calendar className="w-4 h-4 text-[#F72585]" />
+                      <span>
+                        {mic.week_of_month && mic.week_of_month > 0 
+                          ? `${WEEKS_OF_MONTH.find(w => w.value === mic.week_of_month)?.label?.replace(' Week', '')} ` 
+                          : ''
+                        }
+                        {DAYS[mic.day_of_week]}
+                        {(!mic.week_of_month || mic.week_of_month === 0) && mic.frequency === 'weekly' && 's'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-[#A0A0A0]">
+                      <Clock className="w-4 h-4 text-[#00F5D4]" />
+                      <span>
+                        {mic.start_time && new Date(`2000-01-01T${mic.start_time}`).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        })}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-[#A0A0A0]">
-                    <Calendar className="w-4 h-4 text-[#F72585]" />
-                    <span>{DAYS[mic.day_of_week]}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-[#A0A0A0]">
-                    <Clock className="w-4 h-4 text-[#00F5D4]" />
-                    <span>
-                      {new Date(`2000-01-01T${mic.start_time}`).toLocaleTimeString('en-US', {
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true,
-                      })}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-[#7B2FF7]/20">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-[#FFB627] fill-current" />
-                    <span className="text-sm font-medium text-white">{mic.rating}</span>
-                    <span className="text-sm text-[#A0A0A0]">({mic.reviews_count})</span>
+                  <div className="flex items-center justify-between pt-4 border-t border-[#7B2FF7]/20">
+                    {mic.rating ? (
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 text-[#FFB627] fill-current" />
+                        <span className="text-sm font-medium text-white">{mic.rating}</span>
+                        <span className="text-sm text-[#A0A0A0]">({mic.reviews_count})</span>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-[#A0A0A0]">No reviews yet</span>
+                    )}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Users className="w-4 h-4 text-[#A0A0A0]" />
+                      <span className="text-[#A0A0A0]">{mic.time_per_comic || 5} min</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Users className="w-4 h-4 text-[#A0A0A0]" />
-                    <span className="text-[#A0A0A0]">{mic.time_per_comic} min</span>
-                  </div>
-                </div>
 
-                {mic.cover_charge > 0 && (
-                  <div className="mt-3 text-sm text-[#FFB627]">
-                    ${mic.cover_charge} cover
-                  </div>
-                )}
-              </Card>
-            ))}
-          </div>
+                  {mic.cover_charge && mic.cover_charge > 0 && (
+                    <div className="mt-3 text-sm text-[#FFB627]">
+                      ${mic.cover_charge} cover
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
 
-          {filteredMics.length === 0 && (
+          {!isLoading && filteredMics.length === 0 && (
             <div className="text-center py-16">
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#7B2FF7]/10 flex items-center justify-center">
                 <MapPin className="w-10 h-10 text-[#7B2FF7]/50" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">No open mics found</h3>
-              <p className="text-[#A0A0A0]">Try adjusting your filters or search query</p>
+              <p className="text-[#A0A0A0] mb-6">
+                {openMics.length === 0 
+                  ? "We're still adding open mics to our database."
+                  : "Try adjusting your filters or search query"
+                }
+              </p>
+              <Link href="/submit-open-mic">
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Submit an Open Mic
+                </Button>
+              </Link>
             </div>
           )}
         </div>
@@ -340,4 +542,3 @@ export default function OpenMicsPage() {
     </div>
   )
 }
-

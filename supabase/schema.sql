@@ -53,9 +53,11 @@ CREATE TABLE public.open_mics (
   state TEXT NOT NULL,
   zip_code TEXT,
   day_of_week INTEGER CHECK (day_of_week >= 0 AND day_of_week <= 6), -- 0=Sunday
+  week_of_month INTEGER CHECK (week_of_month >= 0 AND week_of_month <= 5) DEFAULT 0, -- 0=every week, 1-5=specific week
   start_time TIME NOT NULL,
   end_time TIME,
   frequency TEXT CHECK (frequency IN ('weekly', 'biweekly', 'monthly', 'one-time')) DEFAULT 'weekly',
+  event_type TEXT CHECK (event_type IN ('open-mic', 'show')) DEFAULT 'open-mic',
   signup_type TEXT CHECK (signup_type IN ('first-come', 'list', 'bucket', 'online')) DEFAULT 'list',
   time_per_comic INTEGER DEFAULT 5, -- minutes
   is_active BOOLEAN DEFAULT true,
@@ -63,6 +65,10 @@ CREATE TABLE public.open_mics (
   drink_minimum BOOLEAN DEFAULT false,
   parking_info TEXT,
   notes TEXT,
+  venue_name TEXT, -- For display when venue_id is not set
+  host_name TEXT, -- For display when host_id is not set
+  contact_email TEXT,
+  website TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

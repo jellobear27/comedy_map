@@ -30,6 +30,20 @@ const DAYS_OF_WEEK = [
   { value: 6, label: 'Saturday' },
 ]
 
+const WEEKS_OF_MONTH = [
+  { value: 0, label: 'Every Week' },
+  { value: 1, label: '1st Week' },
+  { value: 2, label: '2nd Week' },
+  { value: 3, label: '3rd Week' },
+  { value: 4, label: '4th Week' },
+  { value: 5, label: '5th Week' },
+]
+
+const EVENT_TYPES = [
+  { value: 'open-mic', label: 'Open Mic' },
+  { value: 'show', label: 'Show' },
+]
+
 interface OpenMicFormData {
   name: string
   description: string
@@ -38,9 +52,11 @@ interface OpenMicFormData {
   state: string
   zip_code: string
   day_of_week: number
+  week_of_month: number
   start_time: string
   end_time: string
   frequency: 'weekly' | 'biweekly' | 'monthly' | 'one-time'
+  event_type: 'open-mic' | 'show'
   signup_type: 'first-come' | 'list' | 'bucket' | 'online'
   time_per_comic: number
   cover_charge: number
@@ -61,9 +77,11 @@ const initialFormData: OpenMicFormData = {
   state: '',
   zip_code: '',
   day_of_week: 1,
+  week_of_month: 0,
   start_time: '20:00',
   end_time: '22:00',
   frequency: 'weekly',
+  event_type: 'open-mic',
   signup_type: 'list',
   time_per_comic: 5,
   cover_charge: 0,
@@ -127,15 +145,21 @@ export default function AdminOpenMicsPage() {
         state: formData.state,
         zip_code: formData.zip_code,
         day_of_week: formData.day_of_week,
+        week_of_month: formData.week_of_month,
         start_time: formData.start_time,
         end_time: formData.end_time || null,
         frequency: formData.frequency,
+        event_type: formData.event_type,
         signup_type: formData.signup_type,
         time_per_comic: formData.time_per_comic,
         cover_charge: formData.cover_charge,
         drink_minimum: formData.drink_minimum,
         parking_info: formData.parking_info || null,
         notes: formData.notes || null,
+        venue_name: formData.venue_name || null,
+        host_name: formData.host_name || null,
+        contact_email: formData.contact_email || null,
+        website: formData.website || null,
         is_active: true,
       }
 
@@ -175,19 +199,21 @@ export default function AdminOpenMicsPage() {
       state: openMic.state,
       zip_code: openMic.zip_code || '',
       day_of_week: openMic.day_of_week,
+      week_of_month: (openMic as OpenMicEntry & { week_of_month?: number }).week_of_month || 0,
       start_time: openMic.start_time,
       end_time: openMic.end_time || '',
       frequency: openMic.frequency as OpenMicFormData['frequency'],
+      event_type: ((openMic as OpenMicEntry & { event_type?: string }).event_type as OpenMicFormData['event_type']) || 'open-mic',
       signup_type: openMic.signup_type as OpenMicFormData['signup_type'],
       time_per_comic: openMic.time_per_comic || 5,
       cover_charge: openMic.cover_charge || 0,
       drink_minimum: openMic.drink_minimum || false,
       parking_info: openMic.parking_info || '',
       notes: openMic.notes || '',
-      venue_name: '',
-      host_name: '',
-      contact_email: '',
-      website: '',
+      venue_name: (openMic as OpenMicEntry & { venue_name?: string }).venue_name || '',
+      host_name: (openMic as OpenMicEntry & { host_name?: string }).host_name || '',
+      contact_email: (openMic as OpenMicEntry & { contact_email?: string }).contact_email || '',
+      website: (openMic as OpenMicEntry & { website?: string }).website || '',
     })
     setEditingId(openMic.id)
     setIsModalOpen(true)
@@ -498,14 +524,52 @@ export default function AdminOpenMicsPage() {
                 {/* Basic Info */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-white">Basic Information</h3>
+                  
+                  {/* Event Type */}
+                  <div>
+                    <label className="block text-sm font-medium text-[#A0A0A0] mb-2">Event Type</label>
+                    <div className="flex gap-3">
+                      {EVENT_TYPES.map((type) => (
+                        <button
+                          key={type.value}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, event_type: type.value as OpenMicFormData['event_type'] })}
+                          className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
+                            formData.event_type === type.value
+                              ? 'border-[#7B2FF7] bg-[#7B2FF7]/10 text-white'
+                              : 'border-[#7B2FF7]/20 text-[#A0A0A0] hover:border-[#7B2FF7]/50'
+                          }`}
+                        >
+                          {type.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <Input
                     id="name"
-                    label="Open Mic Name"
+                    label="Event Name"
                     placeholder="Monday Night Comedy"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                   />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      id="venue_name"
+                      label="Venue Name"
+                      placeholder="The Comedy Club"
+                      value={formData.venue_name}
+                      onChange={(e) => setFormData({ ...formData, venue_name: e.target.value })}
+                    />
+                    <Input
+                      id="host_name"
+                      label="Host Name"
+                      placeholder="John Smith"
+                      value={formData.host_name}
+                      onChange={(e) => setFormData({ ...formData, host_name: e.target.value })}
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-[#A0A0A0] mb-2">
                       Description
@@ -572,7 +636,7 @@ export default function AdminOpenMicsPage() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-white">Schedule</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="col-span-2">
+                    <div>
                       <label className="block text-sm font-medium text-[#A0A0A0] mb-2">Day of Week</label>
                       <select
                         value={formData.day_of_week}
@@ -582,6 +646,18 @@ export default function AdminOpenMicsPage() {
                       >
                         {DAYS_OF_WEEK.map(day => (
                           <option key={day.value} value={day.value}>{day.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#A0A0A0] mb-2">Week of Month</label>
+                      <select
+                        value={formData.week_of_month}
+                        onChange={(e) => setFormData({ ...formData, week_of_month: Number(e.target.value) })}
+                        className="w-full px-4 py-3 bg-[#1A0033]/50 border border-[#7B2FF7]/20 rounded-xl text-white focus:outline-none focus:border-[#7B2FF7]"
+                      >
+                        {WEEKS_OF_MONTH.map(week => (
+                          <option key={week.value} value={week.value}>{week.label}</option>
                         ))}
                       </select>
                     </div>
