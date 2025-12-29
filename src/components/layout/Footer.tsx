@@ -118,7 +118,7 @@ export default function Footer() {
             © {new Date().getFullYear()} NovaActa. All rights reserved.
           </p>
           <p className="text-sm text-[#A0A0A0]">
-            Made with ⚡ for comedians everywhere
+            Comedy. Culture. Connection. ⚡
           </p>
         </div>
       </div>
