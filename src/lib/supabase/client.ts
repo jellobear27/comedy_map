@@ -14,6 +14,24 @@ export function createClient() {
 
   if (!isValidSupabaseUrl(supabaseUrl) || !supabaseAnonKey || supabaseAnonKey.includes('your_')) {
     console.warn('⚠️ Supabase credentials not configured. Database features will be disabled.')
+    
+    // Create a chainable mock that returns itself for any method
+    const createChainableMock = (): Record<string, unknown> => {
+      const mockResult = { data: [], error: null }
+      const chainable: Record<string, unknown> = {
+        ...mockResult,
+        select: () => chainable,
+        eq: () => chainable,
+        neq: () => chainable,
+        in: () => chainable,
+        order: () => chainable,
+        limit: () => chainable,
+        single: () => ({ data: null, error: null }),
+        maybeSingle: () => ({ data: null, error: null }),
+      }
+      return chainable
+    }
+    
     // Return a mock client for development without Supabase
     return {
       auth: {
@@ -24,24 +42,10 @@ export function createClient() {
         getSession: async () => ({ data: { session: null }, error: null }),
       },
       from: () => ({
-        select: () => ({
-          order: () => ({
-            data: [],
-            error: null,
-          }),
-          eq: () => ({
-            order: () => ({
-              data: [],
-              error: null,
-            }),
-            data: [],
-            error: null,
-          }),
-          data: [],
-          error: null,
-        }),
+        select: () => createChainableMock(),
         insert: async () => ({ data: null, error: new Error('Supabase not configured') }),
         update: async () => ({ data: null, error: new Error('Supabase not configured') }),
+        upsert: async () => ({ data: null, error: new Error('Supabase not configured') }),
         delete: async () => ({ data: null, error: new Error('Supabase not configured') }),
       }),
     } as unknown as ReturnType<typeof createBrowserClient>
