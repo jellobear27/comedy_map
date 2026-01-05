@@ -12,18 +12,82 @@ export interface User {
   updated_at: string
 }
 
-export interface Comedian extends User {
-  role: 'comedian'
+export interface VideoClip {
+  title: string
+  url: string
+  platform: 'youtube' | 'tiktok' | 'instagram' | 'vimeo' | 'other'
+}
+
+export interface SocialLinks {
+  instagram?: string
+  twitter?: string
+  youtube?: string
+  tiktok?: string
+  website?: string
+  spotify?: string
+}
+
+export interface ComedianProfile {
+  id: string
+  username?: string
+  headline?: string
+  comedy_start_date?: string
   years_experience?: number
   comedy_styles?: string[]
-  social_links?: {
-    instagram?: string
-    twitter?: string
-    youtube?: string
-    tiktok?: string
-  }
+  social_links?: SocialLinks
+  video_clips?: VideoClip[]
+  credits?: string[]
+  available_for_booking?: boolean
+  booking_rate?: string
+  travel_radius?: 'local' | 'regional' | 'national' | 'international'
+  performance_types?: ('standup' | 'hosting' | 'corporate' | 'private' | 'festival')[]
+}
+
+export interface Comedian extends User {
+  role: 'comedian'
+  city?: string
+  state?: string
+  profile_photo_url?: string
+  is_public?: boolean
+  comedian_profile?: ComedianProfile
+  // Legacy fields for backward compatibility
+  years_experience?: number
+  comedy_styles?: string[]
+  social_links?: SocialLinks
   credits?: string[]
 }
+
+export const COMEDY_STYLES = [
+  'Observational',
+  'Self-deprecating',
+  'Dark/Edgy',
+  'Political',
+  'Storytelling',
+  'One-liners',
+  'Improv',
+  'Sketch',
+  'Musical',
+  'Absurdist',
+  'Roast',
+  'Clean/Family',
+  'Alternative',
+  'Crowd Work',
+] as const
+
+export const PERFORMANCE_TYPES = [
+  { value: 'standup', label: 'Stand-up Comedy' },
+  { value: 'hosting', label: 'Hosting/MC' },
+  { value: 'corporate', label: 'Corporate Events' },
+  { value: 'private', label: 'Private Parties' },
+  { value: 'festival', label: 'Festivals' },
+] as const
+
+export const TRAVEL_RADIUS_OPTIONS = [
+  { value: 'local', label: 'Local Only (50 miles)' },
+  { value: 'regional', label: 'Regional (250 miles)' },
+  { value: 'national', label: 'National (US-wide)' },
+  { value: 'international', label: 'International' },
+] as const
 
 export interface Venue extends User {
   role: 'venue'

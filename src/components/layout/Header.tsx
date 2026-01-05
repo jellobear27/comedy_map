@@ -9,6 +9,7 @@ import Logo from '@/components/ui/Logo'
 
 const navLinks = [
   { href: '/open-mics', label: 'Open Mics' },
+  { href: '/for-venues/find-talent', label: 'Find Talent' },
   { href: '/courses', label: 'Courses' },
   { href: '/community', label: 'Community' },
   { href: '/for-venues', label: 'For Venues' },
@@ -66,7 +67,7 @@ export default function Header({ user }: HeaderProps) {
             {user ? (
               <div className="flex items-center gap-4">
                 <Link
-                  href="/dashboard"
+                  href="/dashboard/profile"
                   className="flex items-center gap-2 text-sm text-[#A0A0A0] hover:text-white transition-colors"
                 >
                   <User className="w-4 h-4" />
@@ -118,6 +119,9 @@ export default function Header({ user }: HeaderProps) {
               <hr className="border-[#7B2FF7]/20" />
               {user ? (
                 <>
+                  <Link href="/dashboard/profile" className="text-lg text-[#A0A0A0] py-2">
+                    My Profile
+                  </Link>
                   <Link href="/dashboard" className="text-lg text-[#A0A0A0] py-2">
                     Dashboard
                   </Link>
