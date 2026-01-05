@@ -279,24 +279,19 @@ export default function ProfileEditPage() {
                 placeholder="Your name or stage name"
               />
               
-              <div>
-                <label className="block text-sm font-medium text-[#E0E0E0] mb-2">
-                  Username (for your public URL)
-                </label>
-                <div className="flex items-center">
-                  <span className="px-4 py-3 bg-[#0A0A0A] border border-r-0 border-[#333] rounded-l-xl text-[#666] text-sm">
-                    /comedians/
-                  </span>
-                  <input
-                    id="username"
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') }))}
-                    placeholder="yourname"
-                    className="flex-1 px-4 py-3 bg-[#1A1A1A] border border-[#333] rounded-r-xl text-white placeholder-[#666] focus:outline-none focus:border-[#7B2FF7] focus:ring-1 focus:ring-[#7B2FF7] transition-colors"
-                  />
-                </div>
-              </div>
+              <Input
+                id="username"
+                label="Username"
+                value={formData.username}
+                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') }))}
+                placeholder="yourname"
+                icon={<User className="w-4 h-4" />}
+              />
+              {formData.username && (
+                <p className="text-xs text-[#A0A0A0] -mt-4">
+                  Your profile: <span className="text-[#7B2FF7]">novaacta.com/comedians/{formData.username}</span>
+                </p>
+              )}
               
               <Input
                 id="headline"
