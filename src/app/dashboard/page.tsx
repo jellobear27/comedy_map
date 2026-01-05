@@ -1,116 +1,172 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { 
-  MapPin, BookOpen, MessageSquare, Calendar, Clock, Star, 
-  TrendingUp, Users, Heart, ArrowRight, Plus, Settings,
-  Mic, Trophy, Target, Zap
+  MapPin, BookOpen, MessageSquare, Calendar, 
+  Users, Heart, ArrowRight, Plus, User,
+  Mic, Trophy, Target, Zap, Edit, Loader2
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
+import { createClient } from '@/lib/supabase/client'
 
-// Mock user data
-const mockUser = {
-  id: '1',
-  full_name: 'Alex Johnson',
-  email: 'alex@example.com',
-  role: 'comedian',
-  avatar: 'AJ',
-  location: 'Los Angeles, CA',
-  member_since: 'January 2024',
-  stats: {
-    mics_saved: 24,
-    courses_enrolled: 3,
-    community_posts: 12,
-    connections: 156,
-  },
+interface UserProfile {
+  id: string
+  full_name: string | null
+  email: string
+  bio: string | null
+  city: string | null
+  state: string | null
+  created_at: string
+  profile_photo_url: string | null
+  avatar_url: string | null
 }
 
-const upcomingMics = [
-  {
-    id: '1',
-    name: 'The Comedy Store Open Mic',
-    venue: 'The Comedy Store',
-    date: 'Tonight',
-    time: '8:00 PM',
-    status: 'confirmed',
-  },
-  {
-    id: '2',
-    name: 'Laugh Factory Wednesday',
-    venue: 'The Laugh Factory',
-    date: 'Wed, Dec 28',
-    time: '9:00 PM',
-    status: 'pending',
-  },
-  {
-    id: '3',
-    name: 'Ice House New Comics',
-    venue: 'The Ice House',
-    date: 'Fri, Dec 30',
-    time: '7:30 PM',
-    status: 'saved',
-  },
-]
-
-const activeCourses = [
-  {
-    id: '1',
-    title: 'Joke Writing Mastery',
-    instructor: 'Dave Thompson',
-    progress: 68,
-    next_lesson: 'Callbacks and Tags',
-  },
-  {
-    id: '2',
-    title: 'Stage Presence & Delivery',
-    instructor: 'Lisa Chen',
-    progress: 35,
-    next_lesson: 'Body Language Basics',
-  },
-]
-
-const recentActivity = [
-  { type: 'mic', text: 'Saved "Gotham Comedy Club Open Mic"', time: '2 hours ago' },
-  { type: 'course', text: 'Completed lesson "Punchline Techniques"', time: '1 day ago' },
-  { type: 'community', text: 'Received 15 likes on your post', time: '2 days ago' },
-  { type: 'connection', text: 'Connected with Sarah Chen', time: '3 days ago' },
-]
-
-const quickStats = [
-  { icon: Mic, label: 'Mics This Month', value: '8', color: 'text-[#7B2FF7]', bg: 'bg-[#7B2FF7]/10' },
-  { icon: Trophy, label: 'Course Progress', value: '52%', color: 'text-[#F72585]', bg: 'bg-[#F72585]/10' },
-  { icon: Target, label: 'Weekly Goal', value: '4/5', color: 'text-[#00F5D4]', bg: 'bg-[#00F5D4]/10' },
-  { icon: Zap, label: 'Streak', value: '12 days', color: 'text-[#FFB627]', bg: 'bg-[#FFB627]/10' },
-]
+interface ComedianProfile {
+  username: string | null
+  headline: string | null
+  comedy_styles: string[]
+  available_for_booking: boolean
+  video_clips: { title: string; url: string }[]
+}
 
 export default function DashboardPage() {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [comedianProfile, setComedianProfile] = useState<ComedianProfile | null>(null)
+
+  useEffect(() => {
+    loadUserData()
+  }, [])
+
+  const loadUserData = async () => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
+      // Load base profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      // Load comedian profile
+      const { data: comedianData } = await supabase
+        .from('comedian_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileData) {
+        setProfile({
+          ...profileData,
+          email: user.email || '',
+        })
+      } else {
+        // Create a basic profile from auth data
+        setProfile({
+          id: user.id,
+          full_name: user.user_metadata?.full_name || null,
+          email: user.email || '',
+          bio: null,
+          city: null,
+          state: null,
+          created_at: user.created_at,
+          profile_photo_url: null,
+          avatar_url: null,
+        })
+      }
+
+      if (comedianData) {
+        setComedianProfile(comedianData)
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getInitials = () => {
+    if (profile?.full_name) {
+      return profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    }
+    if (profile?.email) {
+      return profile.email[0].toUpperCase()
+    }
+    return '?'
+  }
+
+  const formatMemberSince = () => {
+    if (!profile?.created_at) return ''
+    const date = new Date(profile.created_at)
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  }
+
+  const getLocation = () => {
+    const parts = [profile?.city, profile?.state].filter(Boolean)
+    return parts.length > 0 ? parts.join(', ') : null
+  }
+
+  const isProfileComplete = () => {
+    return profile?.full_name && profile?.bio && profile?.city && comedianProfile?.username
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[#7B2FF7] animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7B2FF7] to-[#F72585] flex items-center justify-center text-white text-2xl font-bold">
-              {mockUser.avatar}
-            </div>
+            {profile?.profile_photo_url || profile?.avatar_url ? (
+              <img 
+                src={profile.profile_photo_url || profile.avatar_url || ''} 
+                alt={profile.full_name || 'Profile'}
+                className="w-16 h-16 rounded-2xl object-cover"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7B2FF7] to-[#F72585] flex items-center justify-center text-white text-2xl font-bold">
+                {getInitials()}
+              </div>
+            )}
             <div>
               <h1 className="text-2xl font-bold text-white">
-                Welcome back, {mockUser.full_name.split(' ')[0]}! 👋
+                Welcome{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
               </h1>
               <p className="text-[#A0A0A0]">
-                <MapPin className="w-4 h-4 inline mr-1" />
-                {mockUser.location} · Member since {mockUser.member_since}
+                {getLocation() && (
+                  <>
+                    <MapPin className="w-4 h-4 inline mr-1" />
+                    {getLocation()} · 
+                  </>
+                )}
+                Member since {formatMemberSince()}
               </p>
             </div>
           </div>
           <div className="flex gap-3">
-            <Link href="/dashboard/settings">
+            <Link href="/dashboard/profile">
               <Button variant="secondary" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Profile
               </Button>
             </Link>
             <Link href="/open-mics">
@@ -122,197 +178,223 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Profile Completion Banner */}
+        {!isProfileComplete() && (
+          <Card className="mb-8 p-6 bg-gradient-to-r from-[#7B2FF7]/20 to-[#F72585]/20 border-[#7B2FF7]/30">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-1">Complete Your Profile 🎤</h2>
+                <p className="text-[#A0A0A0]">
+                  Add your bio, location, and comedy info to get discovered by venues and connect with other comedians.
+                </p>
+              </div>
+              <Link href="/dashboard/profile">
+                <Button>
+                  <User className="w-4 h-4 mr-2" />
+                  Complete Profile
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        )}
+
         {/* Quick Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {quickStats.map((stat) => (
-            <Card key={stat.label} variant="glass" hover={false} className="p-4">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{stat.value}</p>
-                  <p className="text-xs text-[#A0A0A0]">{stat.label}</p>
-                </div>
+          <Card variant="glass" hover={false} className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#7B2FF7]/10 flex items-center justify-center">
+                <Mic className="w-5 h-5 text-[#7B2FF7]" />
               </div>
-            </Card>
-          ))}
+              <div>
+                <p className="text-2xl font-bold text-white">0</p>
+                <p className="text-xs text-[#A0A0A0]">Saved Mics</p>
+              </div>
+            </div>
+          </Card>
+          <Card variant="glass" hover={false} className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#F72585]/10 flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-[#F72585]" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">0</p>
+                <p className="text-xs text-[#A0A0A0]">Courses</p>
+              </div>
+            </div>
+          </Card>
+          <Card variant="glass" hover={false} className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#00F5D4]/10 flex items-center justify-center">
+                <MessageSquare className="w-5 h-5 text-[#00F5D4]" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">0</p>
+                <p className="text-xs text-[#A0A0A0]">Posts</p>
+              </div>
+            </div>
+          </Card>
+          <Card variant="glass" hover={false} className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#FFB627]/10 flex items-center justify-center">
+                <Users className="w-5 h-5 text-[#FFB627]" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">0</p>
+                <p className="text-xs text-[#A0A0A0]">Connections</p>
+              </div>
+            </div>
+          </Card>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Upcoming Open Mics */}
+            {/* Profile Summary */}
             <Card variant="gradient" hover={false}>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-white">Upcoming Open Mics</h2>
-                <Link href="/dashboard/mics" className="text-sm text-[#7B2FF7] hover:text-[#F72585]">
-                  View All
+                <h2 className="text-lg font-semibold text-white">Your Profile</h2>
+                <Link href="/dashboard/profile" className="text-sm text-[#7B2FF7] hover:text-[#F72585]">
+                  Edit
                 </Link>
               </div>
 
               <div className="space-y-4">
-                {upcomingMics.map((mic) => (
-                  <div
-                    key={mic.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-[#7B2FF7]/5 border border-[#7B2FF7]/10"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#7B2FF7]/30 to-[#F72585]/30 flex items-center justify-center">
-                        <Mic className="w-5 h-5 text-[#F72585]" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-white">{mic.name}</h3>
-                        <p className="text-sm text-[#A0A0A0]">{mic.venue}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-white">{mic.date}</p>
-                      <p className="text-sm text-[#A0A0A0]">{mic.time}</p>
-                    </div>
-                    <Badge
-                      variant={
-                        mic.status === 'confirmed' ? 'success' :
-                        mic.status === 'pending' ? 'warning' : 'default'
-                      }
-                      size="sm"
-                    >
-                      {mic.status}
-                    </Badge>
+                {comedianProfile?.headline && (
+                  <p className="text-lg text-[#A0A0A0] italic">"{comedianProfile.headline}"</p>
+                )}
+                
+                {profile?.bio ? (
+                  <p className="text-[#A0A0A0]">{profile.bio}</p>
+                ) : (
+                  <p className="text-[#666] italic">No bio yet. Tell venues about yourself!</p>
+                )}
+
+                {comedianProfile?.comedy_styles && comedianProfile.comedy_styles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {comedianProfile.comedy_styles.map(style => (
+                      <Badge key={style} variant="default" size="sm">{style}</Badge>
+                    ))}
                   </div>
-                ))}
+                )}
+
+                {comedianProfile?.available_for_booking && (
+                  <div className="flex items-center gap-2 pt-2">
+                    <Badge variant="success">Available for Booking</Badge>
+                  </div>
+                )}
+
+                {comedianProfile?.username && (
+                  <div className="pt-4 border-t border-[#1A1A1A]">
+                    <p className="text-sm text-[#A0A0A0]">
+                      Your public profile: 
+                      <Link href={`/comedians/${comedianProfile.username}`} className="text-[#7B2FF7] hover:text-[#F72585] ml-2">
+                        novaacta.com/comedians/{comedianProfile.username}
+                      </Link>
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <Link href="/open-mics">
-                <Button variant="secondary" className="w-full mt-4">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Find More Open Mics
-                </Button>
-              </Link>
+              {!isProfileComplete() && (
+                <Link href="/dashboard/profile">
+                  <Button variant="secondary" className="w-full mt-6">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Complete Your Profile
+                  </Button>
+                </Link>
+              )}
             </Card>
 
-            {/* Active Courses */}
+            {/* Get Started */}
             <Card variant="gradient" hover={false}>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-white">Continue Learning</h2>
-                <Link href="/dashboard/courses" className="text-sm text-[#7B2FF7] hover:text-[#F72585]">
-                  View All
+              <h2 className="text-lg font-semibold text-white mb-6">Get Started</h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Link href="/open-mics" className="group">
+                  <div className="p-4 rounded-xl bg-[#7B2FF7]/5 border border-[#7B2FF7]/10 hover:border-[#7B2FF7]/30 transition-colors">
+                    <Mic className="w-8 h-8 text-[#7B2FF7] mb-3" />
+                    <h3 className="font-medium text-white group-hover:text-[#7B2FF7] transition-colors">Find Open Mics</h3>
+                    <p className="text-sm text-[#A0A0A0]">Discover open mics near you</p>
+                  </div>
+                </Link>
+                <Link href="/courses" className="group">
+                  <div className="p-4 rounded-xl bg-[#F72585]/5 border border-[#F72585]/10 hover:border-[#F72585]/30 transition-colors">
+                    <BookOpen className="w-8 h-8 text-[#F72585] mb-3" />
+                    <h3 className="font-medium text-white group-hover:text-[#F72585] transition-colors">Browse Courses</h3>
+                    <p className="text-sm text-[#A0A0A0]">Learn from the pros</p>
+                  </div>
+                </Link>
+                <Link href="/community" className="group">
+                  <div className="p-4 rounded-xl bg-[#00F5D4]/5 border border-[#00F5D4]/10 hover:border-[#00F5D4]/30 transition-colors">
+                    <MessageSquare className="w-8 h-8 text-[#00F5D4] mb-3" />
+                    <h3 className="font-medium text-white group-hover:text-[#00F5D4] transition-colors">Join Community</h3>
+                    <p className="text-sm text-[#A0A0A0]">Connect with comedians</p>
+                  </div>
+                </Link>
+                <Link href="/for-venues/find-talent" className="group">
+                  <div className="p-4 rounded-xl bg-[#FFB627]/5 border border-[#FFB627]/10 hover:border-[#FFB627]/30 transition-colors">
+                    <Users className="w-8 h-8 text-[#FFB627] mb-3" />
+                    <h3 className="font-medium text-white group-hover:text-[#FFB627] transition-colors">Find Talent</h3>
+                    <p className="text-sm text-[#A0A0A0]">Browse other comedians</p>
+                  </div>
                 </Link>
               </div>
-
-              <div className="space-y-4">
-                {activeCourses.map((course) => (
-                  <div
-                    key={course.id}
-                    className="p-4 rounded-xl bg-[#F72585]/5 border border-[#F72585]/10"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h3 className="font-medium text-white">{course.title}</h3>
-                        <p className="text-sm text-[#A0A0A0]">by {course.instructor}</p>
-                      </div>
-                      <Badge variant="info" size="sm">
-                        {course.progress}%
-                      </Badge>
-                    </div>
-                    <div className="mb-3">
-                      <div className="h-2 bg-[#1A0033] rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-[#7B2FF7] to-[#F72585] rounded-full transition-all"
-                          style={{ width: `${course.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-[#A0A0A0]">
-                        Next: {course.next_lesson}
-                      </p>
-                      <Button size="sm" variant="ghost">
-                        Continue
-                        <ArrowRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Link href="/courses">
-                <Button variant="secondary" className="w-full mt-4">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Browse Courses
-                </Button>
-              </Link>
             </Card>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-8">
-            {/* User Stats */}
-            <Card variant="glass" hover={false}>
-              <h2 className="text-lg font-semibold text-white mb-4">Your Stats</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[#A0A0A0]">
-                    <MapPin className="w-4 h-4" />
-                    Saved Mics
-                  </div>
-                  <span className="font-semibold text-white">{mockUser.stats.mics_saved}</span>
+            {/* Video Clips */}
+            {comedianProfile?.video_clips && comedianProfile.video_clips.length > 0 ? (
+              <Card variant="glass" hover={false}>
+                <h2 className="text-lg font-semibold text-white mb-4">Your Video Clips</h2>
+                <div className="space-y-3">
+                  {comedianProfile.video_clips.slice(0, 3).map((clip, index) => (
+                    <a
+                      key={index}
+                      href={clip.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-[#1A1A1A] hover:bg-[#252525] transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-[#7B2FF7]/20 flex items-center justify-center">
+                        <Mic className="w-5 h-5 text-[#7B2FF7]" />
+                      </div>
+                      <span className="text-sm text-white truncate">{clip.title}</span>
+                    </a>
+                  ))}
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[#A0A0A0]">
-                    <BookOpen className="w-4 h-4" />
-                    Courses
-                  </div>
-                  <span className="font-semibold text-white">{mockUser.stats.courses_enrolled}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[#A0A0A0]">
-                    <MessageSquare className="w-4 h-4" />
-                    Posts
-                  </div>
-                  <span className="font-semibold text-white">{mockUser.stats.community_posts}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[#A0A0A0]">
-                    <Users className="w-4 h-4" />
-                    Connections
-                  </div>
-                  <span className="font-semibold text-white">{mockUser.stats.connections}</span>
-                </div>
-              </div>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card variant="glass" hover={false}>
-              <h2 className="text-lg font-semibold text-white mb-4">Recent Activity</h2>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className={`
-                      w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                      ${activity.type === 'mic' ? 'bg-[#7B2FF7]/10' : ''}
-                      ${activity.type === 'course' ? 'bg-[#F72585]/10' : ''}
-                      ${activity.type === 'community' ? 'bg-[#00F5D4]/10' : ''}
-                      ${activity.type === 'connection' ? 'bg-[#FFB627]/10' : ''}
-                    `}>
-                      {activity.type === 'mic' && <MapPin className="w-4 h-4 text-[#7B2FF7]" />}
-                      {activity.type === 'course' && <BookOpen className="w-4 h-4 text-[#F72585]" />}
-                      {activity.type === 'community' && <Heart className="w-4 h-4 text-[#00F5D4]" />}
-                      {activity.type === 'connection' && <Users className="w-4 h-4 text-[#FFB627]" />}
-                    </div>
-                    <div>
-                      <p className="text-sm text-white">{activity.text}</p>
-                      <p className="text-xs text-[#A0A0A0]">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
+                <Link href="/dashboard/profile">
+                  <Button variant="ghost" size="sm" className="w-full mt-4">
+                    Manage Clips
+                  </Button>
+                </Link>
+              </Card>
+            ) : (
+              <Card variant="glass" hover={false}>
+                <h2 className="text-lg font-semibold text-white mb-4">Video Clips</h2>
+                <p className="text-[#A0A0A0] text-sm mb-4">
+                  Add links to your sets so venues can see your work!
+                </p>
+                <Link href="/dashboard/profile">
+                  <Button variant="secondary" size="sm" className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Video Clips
+                  </Button>
+                </Link>
+              </Card>
+            )}
 
             {/* Quick Links */}
             <Card variant="glass" hover={false}>
               <h2 className="text-lg font-semibold text-white mb-4">Quick Links</h2>
               <div className="space-y-2">
+                <Link
+                  href="/dashboard/profile"
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                >
+                  <User className="w-5 h-5 text-[#7B2FF7]" />
+                  <span className="text-[#A0A0A0] hover:text-white">Edit Profile</span>
+                </Link>
                 <Link
                   href="/community"
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
@@ -321,19 +403,21 @@ export default function DashboardPage() {
                   <span className="text-[#A0A0A0] hover:text-white">Community Forum</span>
                 </Link>
                 <Link
-                  href="/dashboard/saved"
+                  href="/open-mics"
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
                 >
-                  <Heart className="w-5 h-5 text-[#F72585]" />
-                  <span className="text-[#A0A0A0] hover:text-white">Saved Open Mics</span>
+                  <Mic className="w-5 h-5 text-[#F72585]" />
+                  <span className="text-[#A0A0A0] hover:text-white">Find Open Mics</span>
                 </Link>
-                <Link
-                  href="/dashboard/connections"
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
-                >
-                  <Users className="w-5 h-5 text-[#FFB627]" />
-                  <span className="text-[#A0A0A0] hover:text-white">Connections</span>
-                </Link>
+                {comedianProfile?.username && (
+                  <Link
+                    href={`/comedians/${comedianProfile.username}`}
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                  >
+                    <ArrowRight className="w-5 h-5 text-[#FFB627]" />
+                    <span className="text-[#A0A0A0] hover:text-white">View Public Profile</span>
+                  </Link>
+                )}
               </div>
             </Card>
           </div>
@@ -342,4 +426,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-
