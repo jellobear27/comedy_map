@@ -24,6 +24,8 @@ function SignupForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const [showConfirmation, setShowConfirmation] = useState(false)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -32,10 +34,14 @@ function SignupForm() {
     try {
       const supabase = createClient()
       
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Get the current URL for the callback
+      const redirectUrl = `${window.location.origin}/auth/callback`
+      
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
             role: role,
@@ -44,12 +50,55 @@ function SignupForm() {
       })
 
       if (signUpError) throw signUpError
-      router.push('/dashboard')
+      
+      // Check if email confirmation is required
+      if (data?.user?.identities?.length === 0) {
+        // User already exists
+        setError('An account with this email already exists. Please sign in instead.')
+      } else if (data?.user && !data?.session) {
+        // Email confirmation required
+        setShowConfirmation(true)
+      } else if (data?.session) {
+        // Email confirmation not required, user is logged in
+        router.push('/dashboard')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setIsLoading(false)
     }
+  }
+  
+  // Show confirmation message
+  if (showConfirmation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-12">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#00F5D4]/20 rounded-full blur-[128px]" />
+          <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-[#7B2FF7]/20 rounded-full blur-[128px]" />
+        </div>
+        
+        <div className="relative w-full max-w-md text-center">
+          <div className="bg-[#1A0033]/40 backdrop-blur-xl border border-[#00F5D4]/20 rounded-3xl p-8">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#00F5D4]/10 flex items-center justify-center">
+              <Mail className="w-8 h-8 text-[#00F5D4]" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Check Your Email</h1>
+            <p className="text-[#A0A0A0] mb-6">
+              We sent a confirmation link to <span className="text-white font-medium">{email}</span>
+            </p>
+            <p className="text-sm text-[#A0A0A0] mb-6">
+              Click the link in the email to verify your account and get started.
+            </p>
+            <Link href="/login">
+              <Button variant="secondary" className="w-full">
+                Back to Login
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
