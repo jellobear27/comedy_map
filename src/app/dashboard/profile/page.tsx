@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   User, Camera, MapPin, Calendar, Globe, Instagram, Youtube, 
-  Twitter, Video, Plus, X, Loader2, Check, ExternalLink, Music
+  Twitter, Video, Plus, X, Loader2, Check, ExternalLink, Music, Upload
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -65,6 +65,7 @@ export default function ProfileEditPage() {
   const [formData, setFormData] = useState<ProfileFormData>(initialFormData)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [newVideoClip, setNewVideoClip] = useState<VideoClip>({ title: '', url: '', platform: 'youtube' })
 
@@ -231,6 +232,66 @@ export default function ProfileEditPage() {
     return years
   }
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please upload an image file' })
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Image must be less than 5MB' })
+      return
+    }
+
+    setIsUploadingPhoto(true)
+    setMessage(null)
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        setMessage({ type: 'error', text: 'Please log in to upload a photo' })
+        return
+      }
+
+      // Create unique filename
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      const filePath = `avatars/${fileName}`
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(filePath, file, { upsert: true })
+
+      if (uploadError) {
+        // If bucket doesn't exist, fall back to URL input
+        console.error('Upload error:', uploadError)
+        setMessage({ type: 'error', text: 'Photo upload not configured. Please use a URL instead or contact support.' })
+        return
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(filePath)
+
+      setFormData(prev => ({ ...prev, profile_photo_url: publicUrl }))
+      setMessage({ type: 'success', text: 'Photo uploaded successfully!' })
+    } catch (error) {
+      console.error('Upload error:', error)
+      setMessage({ type: 'error', text: 'Failed to upload photo. Try using a URL instead.' })
+    } finally {
+      setIsUploadingPhoto(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -300,15 +361,74 @@ export default function ProfileEditPage() {
                 onChange={(e) => setFormData(prev => ({ ...prev, headline: e.target.value }))}
                 placeholder="e.g., Denver-based observational comic"
               />
+            </div>
 
-              <Input
-                id="profile_photo_url"
-                label="Profile Photo URL"
-                value={formData.profile_photo_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, profile_photo_url: e.target.value }))}
-                placeholder="https://..."
-                icon={<Camera className="w-4 h-4" />}
-              />
+            {/* Profile Photo Upload */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-[#E0E0E0] mb-2">Profile Photo</label>
+              <div className="flex items-start gap-6">
+                {/* Photo Preview */}
+                <div className="flex-shrink-0">
+                  {formData.profile_photo_url ? (
+                    <div className="relative">
+                      <img
+                        src={formData.profile_photo_url}
+                        alt="Profile"
+                        className="w-24 h-24 rounded-xl object-cover border-2 border-[#7B2FF7]/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, profile_photo_url: '' }))}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-24 h-24 rounded-xl bg-[#1A1A1A] border-2 border-dashed border-[#333] flex items-center justify-center">
+                      <Camera className="w-8 h-8 text-[#666]" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload Controls */}
+                <div className="flex-1 space-y-3">
+                  <label className="block">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                      disabled={isUploadingPhoto}
+                    />
+                    <div className="flex items-center gap-3">
+                      <span className="px-4 py-2 bg-[#7B2FF7] hover:bg-[#6B1FE7] text-white rounded-xl cursor-pointer transition-colors inline-flex items-center gap-2">
+                        {isUploadingPhoto ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            Upload Photo
+                          </>
+                        )}
+                      </span>
+                      <span className="text-sm text-[#666]">or</span>
+                    </div>
+                  </label>
+                  
+                  <input
+                    type="url"
+                    value={formData.profile_photo_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, profile_photo_url: e.target.value }))}
+                    placeholder="Paste image URL"
+                    className="w-full px-4 py-2 bg-[#1A1A1A] border border-[#333] rounded-xl text-white placeholder-[#666] text-sm focus:outline-none focus:border-[#7B2FF7] transition-colors"
+                  />
+                  <p className="text-xs text-[#666]">JPG, PNG or GIF. Max 5MB.</p>
+                </div>
+              </div>
             </div>
 
             <div className="mt-6">
