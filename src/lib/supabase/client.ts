@@ -51,5 +51,6 @@ export function createClient() {
     } as unknown as ReturnType<typeof createBrowserClient>
   }
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+  // At this point, we know both values are valid strings
+  return createBrowserClient(supabaseUrl!, supabaseAnonKey!)
 }

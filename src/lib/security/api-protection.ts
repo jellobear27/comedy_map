@@ -61,7 +61,7 @@ export function withProtection<T>(
       }
 
       // Authentication check
-      const supabase = createClient();
+      const supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
       if (requireAuth && !user) {

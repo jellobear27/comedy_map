@@ -28,6 +28,29 @@ interface ComedianListing {
   performance_types: string[]
 }
 
+interface ComedianProfileRow {
+  id: string
+  username: string | null
+  headline: string | null
+  comedy_start_date: string | null
+  available_for_booking: boolean
+  booking_rate: string | null
+  travel_radius: string | null
+  performance_types: string[] | null
+  comedy_styles: string[] | null
+}
+
+interface ProfileRow {
+  id: string
+  full_name: string | null
+  bio: string | null
+  city: string | null
+  state: string | null
+  profile_photo_url: string | null
+  avatar_url: string | null
+  is_public: boolean
+}
+
 export default function FindTalentPage() {
   const [comedians, setComedians] = useState<ComedianListing[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -58,7 +81,7 @@ export default function FindTalentPage() {
       }
 
       // Fetch corresponding base profiles
-      const profileIds = comedianProfiles.map(cp => cp.id)
+      const profileIds = (comedianProfiles as ComedianProfileRow[]).map((cp: ComedianProfileRow) => cp.id)
       const { data: profiles } = await supabase
         .from('profiles')
         .select('*')
@@ -71,9 +94,9 @@ export default function FindTalentPage() {
       }
 
       // Merge the data
-      const merged = comedianProfiles
-        .map(cp => {
-          const profile = profiles.find(p => p.id === cp.id)
+      const merged = (comedianProfiles as ComedianProfileRow[])
+        .map((cp: ComedianProfileRow) => {
+          const profile = (profiles as ProfileRow[]).find((p: ProfileRow) => p.id === cp.id)
           if (!profile) return null
           return {
             id: cp.id,
