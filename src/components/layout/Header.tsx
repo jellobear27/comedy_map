@@ -6,14 +6,19 @@ import { usePathname } from 'next/navigation'
 import { Menu, X, User, LogOut } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Logo from '@/components/ui/Logo'
+import { FEATURES } from '@/config/features'
 
-const navLinks = [
-  { href: '/open-mics', label: 'Open Mics' },
-  { href: '/for-venues/find-talent', label: 'Find Talent' },
-  { href: '/courses', label: 'Courses' },
-  { href: '/community', label: 'Community' },
-  { href: '/for-venues', label: 'For Venues' },
+// Define all nav links with their feature flag
+const allNavLinks = [
+  { href: '/open-mics', label: 'Open Mics', feature: 'openMics' as const },
+  { href: '/for-venues/find-talent', label: 'Find Talent', feature: 'findTalent' as const },
+  { href: '/courses', label: 'Courses', feature: 'courses' as const },
+  { href: '/community', label: 'Community', feature: 'community' as const },
+  { href: '/for-venues', label: 'For Venues', feature: 'forVenues' as const },
 ]
+
+// Filter to only show enabled features
+const navLinks = allNavLinks.filter(link => FEATURES[link.feature])
 
 interface HeaderProps {
   user?: { id: string; email: string; full_name?: string } | null
@@ -144,4 +149,3 @@ export default function Header({ user }: HeaderProps) {
     </header>
   )
 }
-

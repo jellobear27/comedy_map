@@ -3,6 +3,7 @@ import { MapPin, Mic, BookOpen, Users, Zap, ArrowRight, Star, Calendar, Trending
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
+import { FEATURES } from '@/config/features'
 
 const features = [
   {
@@ -94,7 +95,7 @@ export default function HomePage() {
             The stage is yours.
           </p>
           <p className="text-lg text-[#A0A0A0] max-w-2xl mx-auto mb-10">
-            Discover open mics, learn from the best, and connect with comedians across the USA.
+            Discover open mics, learn from the best, and connect with comedians across the USA. 
           </p>
 
           {/* CTA Buttons */}
@@ -251,168 +252,172 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* For Venues Section */}
-      <section className="relative py-24 lg:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            {/* Feature Preview */}
-            <div className="relative order-2 lg:order-1">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#F72585] to-[#FFB627] rounded-3xl blur-xl opacity-20" />
-              <Card variant="glass" hover={false} className="relative">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-white">Connect with Hosts</h3>
-                  <Badge variant="warning">New</Badge>
-                </div>
-                
-                {/* Mock host cards */}
-                {[
-                  { name: 'Mike Johnson', experience: '5 years hosting', shows: 200, rating: 4.9 },
-                  { name: 'Sarah Chen', experience: '3 years hosting', shows: 150, rating: 4.8 },
-                ].map((host, i) => (
-                  <div key={host.name} className={`p-4 rounded-xl bg-[#7B2FF7]/10 ${i === 0 ? 'mb-4' : ''}`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F72585] to-[#FFB627] flex items-center justify-center font-semibold text-white">
-                          {host.name.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div>
-                          <div className="font-medium text-white">{host.name}</div>
-                          <div className="text-sm text-[#A0A0A0]">{host.experience}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 text-[#FFB627]">
-                        <Star className="w-4 h-4 fill-current" />
-                        <span className="text-sm font-medium">{host.rating}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-[#A0A0A0]">
-                      <span>{host.shows}+ shows hosted</span>
-                    </div>
+      {/* For Venues Section - Only show if feature is enabled */}
+      {FEATURES.forVenues && (
+        <section className="relative py-24 lg:py-32">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+              {/* Feature Preview */}
+              <div className="relative order-2 lg:order-1">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#F72585] to-[#FFB627] rounded-3xl blur-xl opacity-20" />
+                <Card variant="glass" hover={false} className="relative">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-white">Connect with Hosts</h3>
+                    <Badge variant="warning">New</Badge>
                   </div>
-                ))}
-                
-                <Button variant="secondary" className="w-full mt-4">
-                  View All Hosts
-                </Button>
-              </Card>
-            </div>
+                  
+                  {/* Mock host cards */}
+                  {[
+                    { name: 'Mike Johnson', experience: '5 years hosting', shows: 200, rating: 4.9 },
+                    { name: 'Sarah Chen', experience: '3 years hosting', shows: 150, rating: 4.8 },
+                  ].map((host, i) => (
+                    <div key={host.name} className={`p-4 rounded-xl bg-[#7B2FF7]/10 ${i === 0 ? 'mb-4' : ''}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F72585] to-[#FFB627] flex items-center justify-center font-semibold text-white">
+                            {host.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <div className="font-medium text-white">{host.name}</div>
+                            <div className="text-sm text-[#A0A0A0]">{host.experience}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 text-[#FFB627]">
+                          <Star className="w-4 h-4 fill-current" />
+                          <span className="text-sm font-medium">{host.rating}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-[#A0A0A0]">
+                        <span>{host.shows}+ shows hosted</span>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <Button variant="secondary" className="w-full mt-4">
+                    View All Hosts
+                  </Button>
+                </Card>
+              </div>
 
-            <div className="order-1 lg:order-2">
-              <Badge variant="warning" className="mb-4">For Venues</Badge>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-                Start Your Open Mic,{' '}
-                <span className="bg-gradient-to-r from-[#F72585] to-[#FFB627] bg-clip-text text-transparent">
-                  Find the Perfect Host
+              <div className="order-1 lg:order-2">
+                <Badge variant="warning" className="mb-4">For Venues</Badge>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+                  Start Your Open Mic,{' '}
+                  <span className="bg-gradient-to-r from-[#F72585] to-[#FFB627] bg-clip-text text-transparent">
+                    Find the Perfect Host
+                  </span>
+                </h2>
+                <p className="text-lg text-[#A0A0A0] mb-8">
+                  Interested in bringing live comedy to your venue? Connect with experienced hosts and 
+                  promoters in your area who can help you launch a successful open mic night.
+                </p>
+                
+                <ul className="space-y-4 mb-8">
+                  {[
+                    'Browse profiles of experienced comedy hosts',
+                    'Read reviews from other venues',
+                    'Direct messaging to discuss opportunities',
+                    'List your open mic for free once established',
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-[#FFB627]/20 flex items-center justify-center">
+                        <TrendingUp className="w-3 h-3 text-[#FFB627]" />
+                      </div>
+                      <span className="text-[#A0A0A0]">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href="/signup?role=venue">
+                  <Button className="bg-gradient-to-r from-[#F72585] to-[#FFB627]">
+                    Join as Venue
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Courses Preview - Only show if feature is enabled */}
+      {FEATURES.courses && (
+        <section className="relative py-24 lg:py-32 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#F72585]/5 to-transparent" />
+          
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <Badge variant="danger" className="mb-4">Courses</Badge>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+                Learn from the{' '}
+                <span className="bg-gradient-to-r from-[#F72585] to-[#FF6B6B] bg-clip-text text-transparent">
+                  Best in Comedy
                 </span>
               </h2>
-              <p className="text-lg text-[#A0A0A0] mb-8">
-                Interested in bringing live comedy to your venue? Connect with experienced hosts and 
-                promoters in your area who can help you launch a successful open mic night.
+              <p className="text-lg text-[#A0A0A0] max-w-2xl mx-auto">
+                Expert-led courses covering everything from joke writing to headlining your own show.
               </p>
-              
-              <ul className="space-y-4 mb-8">
-                {[
-                  'Browse profiles of experienced comedy hosts',
-                  'Read reviews from other venues',
-                  'Direct messaging to discuss opportunities',
-                  'List your open mic for free once established',
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#FFB627]/20 flex items-center justify-center">
-                      <TrendingUp className="w-3 h-3 text-[#FFB627]" />
-                    </div>
-                    <span className="text-[#A0A0A0]">{item}</span>
-                  </li>
-                ))}
-              </ul>
+            </div>
 
-              <Link href="/signup?role=venue">
-                <Button className="bg-gradient-to-r from-[#F72585] to-[#FFB627]">
-                  Join as Venue
+            <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+              {[
+                {
+                  title: 'Joke Writing Mastery',
+                  instructor: 'Dave Thompson',
+                  level: 'Beginner',
+                  lessons: 24,
+                  rating: 4.9,
+                  price: 79,
+                },
+                {
+                  title: 'Crowd Work Secrets',
+                  instructor: 'Maria Santos',
+                  level: 'Intermediate',
+                  lessons: 18,
+                  rating: 4.8,
+                  price: 99,
+                },
+                {
+                  title: 'From Open Mic to Headliner',
+                  instructor: 'James Wilson',
+                  level: 'Advanced',
+                  lessons: 32,
+                  rating: 4.9,
+                  price: 149,
+                },
+              ].map((course) => (
+                <Card key={course.title} variant="gradient">
+                  <div className="aspect-video rounded-xl bg-gradient-to-br from-[#7B2FF7]/30 to-[#F72585]/30 mb-4 flex items-center justify-center">
+                    <BookOpen className="w-12 h-12 text-[#F72585]/50" />
+                  </div>
+                  <Badge size="sm" className="mb-3">{course.level}</Badge>
+                  <h3 className="text-lg font-semibold text-white mb-1">{course.title}</h3>
+                  <p className="text-sm text-[#A0A0A0] mb-4">by {course.instructor}</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-4 text-[#A0A0A0]">
+                      <span>{course.lessons} lessons</span>
+                      <span className="flex items-center gap-1 text-[#FFB627]">
+                        <Star className="w-3 h-3 fill-current" />
+                        {course.rating}
+                      </span>
+                    </div>
+                    <span className="font-semibold text-white">${course.price}</span>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            <div className="text-center mt-12">
+              <Link href="/courses">
+                <Button variant="secondary" size="lg">
+                  Browse All Courses
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Courses Preview */}
-      <section className="relative py-24 lg:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#F72585]/5 to-transparent" />
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <Badge variant="danger" className="mb-4">Courses</Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-              Learn from the{' '}
-              <span className="bg-gradient-to-r from-[#F72585] to-[#FF6B6B] bg-clip-text text-transparent">
-                Best in Comedy
-              </span>
-            </h2>
-            <p className="text-lg text-[#A0A0A0] max-w-2xl mx-auto">
-              Expert-led courses covering everything from joke writing to headlining your own show.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-            {[
-              {
-                title: 'Joke Writing Mastery',
-                instructor: 'Dave Thompson',
-                level: 'Beginner',
-                lessons: 24,
-                rating: 4.9,
-                price: 79,
-              },
-              {
-                title: 'Crowd Work Secrets',
-                instructor: 'Maria Santos',
-                level: 'Intermediate',
-                lessons: 18,
-                rating: 4.8,
-                price: 99,
-              },
-              {
-                title: 'From Open Mic to Headliner',
-                instructor: 'James Wilson',
-                level: 'Advanced',
-                lessons: 32,
-                rating: 4.9,
-                price: 149,
-              },
-            ].map((course) => (
-              <Card key={course.title} variant="gradient">
-                <div className="aspect-video rounded-xl bg-gradient-to-br from-[#7B2FF7]/30 to-[#F72585]/30 mb-4 flex items-center justify-center">
-                  <BookOpen className="w-12 h-12 text-[#F72585]/50" />
-                </div>
-                <Badge size="sm" className="mb-3">{course.level}</Badge>
-                <h3 className="text-lg font-semibold text-white mb-1">{course.title}</h3>
-                <p className="text-sm text-[#A0A0A0] mb-4">by {course.instructor}</p>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-4 text-[#A0A0A0]">
-                    <span>{course.lessons} lessons</span>
-                    <span className="flex items-center gap-1 text-[#FFB627]">
-                      <Star className="w-3 h-3 fill-current" />
-                      {course.rating}
-                    </span>
-                  </div>
-                  <span className="font-semibold text-white">${course.price}</span>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Link href="/courses">
-              <Button variant="secondary" size="lg">
-                Browse All Courses
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Testimonials */}
       <section className="relative py-24 lg:py-32">
@@ -465,7 +470,7 @@ export default function HomePage() {
             </span>
           </h2>
           <p className="text-lg text-[#A0A0A0] mb-10 max-w-2xl mx-auto">
-            Join thousands of comedians and venues already using ComedyMap to grow their comedy careers and businesses.
+            Join thousands of comedians and venues already using NovaActa to grow their comedy careers and businesses.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signup">

@@ -1,34 +1,50 @@
 import Link from 'next/link'
 import { Instagram, Twitter, Youtube } from 'lucide-react'
 import Logo from '@/components/ui/Logo'
+import { FEATURES } from '@/config/features'
 
-const footerLinks = {
+// Define all footer links with their feature flags
+const allFooterLinks = {
   platform: [
-    { href: '/open-mics', label: 'Find Open Mics' },
-    { href: '/courses', label: 'Courses' },
-    { href: '/community', label: 'Community' },
-    { href: '/for-venues', label: 'For Venues' },
+    { href: '/open-mics', label: 'Find Open Mics', feature: 'openMics' as const },
+    { href: '/courses', label: 'Courses', feature: 'courses' as const },
+    { href: '/community', label: 'Community', feature: 'community' as const },
+    { href: '/for-venues', label: 'For Venues', feature: 'forVenues' as const },
   ],
   resources: [
-    { href: '/blog', label: 'Blog' },
-    { href: '/guides', label: 'Comedy Guides' },
-    { href: '/podcast', label: 'Podcast' },
-    { href: '/events', label: 'Live Events' },
+    { href: '/blog', label: 'Blog', feature: 'blog' as const },
+    { href: '/guides', label: 'Comedy Guides', feature: 'guides' as const },
+    { href: '/podcast', label: 'Podcast', feature: 'podcast' as const },
+    { href: '/events', label: 'Live Events', feature: 'liveEvents' as const },
   ],
   company: [
-    { href: '/about', label: 'About Us' },
-    { href: '/careers', label: 'Careers' },
-    { href: '/contact', label: 'Contact' },
-    { href: '/press', label: 'Press' },
+    { href: '/about', label: 'About Us', feature: 'about' as const },
+    { href: '/careers', label: 'Careers', feature: 'careers' as const },
+    { href: '/contact', label: 'Contact', feature: 'contact' as const },
+    { href: '/press', label: 'Press', feature: 'press' as const },
   ],
   legal: [
-    { href: '/privacy', label: 'Privacy Policy' },
-    { href: '/terms', label: 'Terms of Service' },
-    { href: '/cookies', label: 'Cookie Policy' },
+    { href: '/privacy', label: 'Privacy Policy', feature: 'privacy' as const },
+    { href: '/terms', label: 'Terms of Service', feature: 'terms' as const },
+    { href: '/cookies', label: 'Cookie Policy', feature: 'cookies' as const },
   ],
 }
 
+// Filter to only show enabled features
+const footerLinks = {
+  platform: allFooterLinks.platform.filter(link => FEATURES[link.feature]),
+  resources: allFooterLinks.resources.filter(link => FEATURES[link.feature]),
+  company: allFooterLinks.company.filter(link => FEATURES[link.feature]),
+  legal: allFooterLinks.legal.filter(link => FEATURES[link.feature]),
+}
+
 export default function Footer() {
+  // Check if any section has links to show
+  const hasPlatformLinks = footerLinks.platform.length > 0
+  const hasResourceLinks = footerLinks.resources.length > 0
+  const hasCompanyLinks = footerLinks.company.length > 0
+  const hasLegalLinks = footerLinks.legal.length > 0
+  
   return (
     <footer className="relative border-t border-[#7B2FF7]/10">
       {/* Background glow */}
@@ -60,58 +76,69 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Links */}
-          <div>
-            <h3 className="font-semibold text-white mb-4">Platform</h3>
-            <ul className="space-y-3">
-              {footerLinks.platform.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-[#A0A0A0] hover:text-white transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Platform Links */}
+          {hasPlatformLinks && (
+            <div>
+              <h3 className="font-semibold text-white mb-4">Platform</h3>
+              <ul className="space-y-3">
+                {footerLinks.platform.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm text-[#A0A0A0] hover:text-white transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-          <div>
-            <h3 className="font-semibold text-white mb-4">Resources</h3>
-            <ul className="space-y-3">
-              {footerLinks.resources.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-[#A0A0A0] hover:text-white transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Resources Links */}
+          {hasResourceLinks && (
+            <div>
+              <h3 className="font-semibold text-white mb-4">Resources</h3>
+              <ul className="space-y-3">
+                {footerLinks.resources.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm text-[#A0A0A0] hover:text-white transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-          <div>
-            <h3 className="font-semibold text-white mb-4">Company</h3>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-[#A0A0A0] hover:text-white transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Company Links */}
+          {hasCompanyLinks && (
+            <div>
+              <h3 className="font-semibold text-white mb-4">Company</h3>
+              <ul className="space-y-3">
+                {footerLinks.company.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm text-[#A0A0A0] hover:text-white transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-          <div>
-            <h3 className="font-semibold text-white mb-4">Legal</h3>
-            <ul className="space-y-3">
-              {footerLinks.legal.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-[#A0A0A0] hover:text-white transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Legal Links */}
+          {hasLegalLinks && (
+            <div>
+              <h3 className="font-semibold text-white mb-4">Legal</h3>
+              <ul className="space-y-3">
+                {footerLinks.legal.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm text-[#A0A0A0] hover:text-white transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="mt-12 pt-8 border-t border-[#7B2FF7]/10 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -126,4 +153,3 @@ export default function Footer() {
     </footer>
   )
 }
-
