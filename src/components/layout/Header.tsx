@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, User, LogOut } from 'lucide-react'
+import { Menu, X, User, LogOut, Sparkles } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Logo from '@/components/ui/Logo'
 import { FEATURES } from '@/config/features'
@@ -26,7 +26,38 @@ interface HeaderProps {
 
 export default function Header({ user }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [showOpenMicsAnimation, setShowOpenMicsAnimation] = useState(false)
+  const [animationPhase, setAnimationPhase] = useState<'initial' | 'explode' | 'settle'>('initial')
   const pathname = usePathname()
+  
+  // Theatrical animation for Open Mics on landing page
+  useEffect(() => {
+    if (pathname === '/') {
+      // Check if we've already shown the animation this session
+      const hasAnimated = sessionStorage.getItem('openMicsAnimated')
+      if (!hasAnimated) {
+        // Small delay before the drama begins
+        const startTimer = setTimeout(() => {
+          setShowOpenMicsAnimation(true)
+          setAnimationPhase('explode')
+          
+          // Settle back after the explosion
+          const settleTimer = setTimeout(() => {
+            setAnimationPhase('settle')
+          }, 800)
+          
+          sessionStorage.setItem('openMicsAnimated', 'true')
+          return () => clearTimeout(settleTimer)
+        }, 500)
+        
+        return () => clearTimeout(startTimer)
+      } else {
+        // Already animated, just show the settled state
+        setShowOpenMicsAnimation(true)
+        setAnimationPhase('settle')
+      }
+    }
+  }, [pathname])
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -47,24 +78,50 @@ export default function Header({ user }: HeaderProps) {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`
-                  relative text-sm font-medium transition-colors
-                  ${pathname === link.href 
-                    ? 'text-white' 
-                    : 'text-[#A0A0A0] hover:text-white'
-                  }
-                `}
-              >
-                {link.label}
-                {pathname === link.href && (
-                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-[#7B2FF7] to-[#F72585] rounded-full" />
-                )}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isOpenMics = link.href === '/open-mics'
+              const isTheatrical = isOpenMics && showOpenMicsAnimation && pathname === '/'
+              
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`
+                    relative font-medium transition-all
+                    ${isTheatrical 
+                      ? `
+                        ${animationPhase === 'explode' 
+                          ? 'animate-open-mics-explode' 
+                          : 'animate-open-mics-pulse'
+                        }
+                        px-6 py-3 rounded-2xl text-lg
+                        bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B]
+                        text-white font-bold shadow-2xl
+                        shadow-[#F72585]/50
+                      `
+                      : `text-sm ${pathname === link.href 
+                          ? 'text-white' 
+                          : 'text-[#A0A0A0] hover:text-white'
+                        }`
+                    }
+                  `}
+                  style={isTheatrical ? {
+                    textShadow: '0 0 20px rgba(247, 37, 133, 0.8)',
+                  } : {}}
+                >
+                  {isTheatrical && animationPhase === 'settle' && (
+                    <Sparkles className="inline-block w-5 h-5 mr-2 animate-pulse" />
+                  )}
+                  {link.label}
+                  {isTheatrical && animationPhase === 'settle' && (
+                    <Sparkles className="inline-block w-5 h-5 ml-2 animate-pulse" />
+                  )}
+                  {pathname === link.href && !isTheatrical && (
+                    <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-[#7B2FF7] to-[#F72585] rounded-full" />
+                  )}
+                </Link>
+              )
+            })}
           </div>
 
           {/* Auth Buttons */}
