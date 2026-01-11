@@ -143,9 +143,9 @@ export default function DashboardPage() {
                 className="w-16 h-16 rounded-2xl object-cover"
               />
             ) : (
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7B2FF7] to-[#F72585] flex items-center justify-center text-white text-2xl font-bold">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7B2FF7] to-[#F72585] flex items-center justify-center text-white text-2xl font-bold">
                 {getInitials()}
-              </div>
+            </div>
             )}
             <div>
               <h1 className="text-2xl font-bold text-white">
@@ -154,7 +154,7 @@ export default function DashboardPage() {
               <p className="text-[#A0A0A0]">
                 {getLocation() && (
                   <>
-                    <MapPin className="w-4 h-4 inline mr-1" />
+                <MapPin className="w-4 h-4 inline mr-1" />
                     {getLocation()} · 
                   </>
                 )}
@@ -223,11 +223,11 @@ export default function DashboardPage() {
             </div>
           </Card>
           <Card variant="glass" hover={false} className="p-4">
-            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#00F5D4]/10 flex items-center justify-center">
                 <MessageSquare className="w-5 h-5 text-[#00F5D4]" />
-              </div>
-              <div>
+                </div>
+                <div>
                 <p className="text-2xl font-bold text-white">0</p>
                 <p className="text-xs text-[#A0A0A0]">Posts</p>
               </div>
@@ -241,9 +241,9 @@ export default function DashboardPage() {
               <div>
                 <p className="text-2xl font-bold text-white">0</p>
                 <p className="text-xs text-[#A0A0A0]">Connections</p>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -274,13 +274,13 @@ export default function DashboardPage() {
                     {comedianProfile.comedy_styles.map(style => (
                       <Badge key={style} variant="default" size="sm">{style}</Badge>
                     ))}
-                  </div>
+                      </div>
                 )}
 
                 {comedianProfile?.available_for_booking && (
                   <div className="flex items-center gap-2 pt-2">
                     <Badge variant="success">Available for Booking</Badge>
-                  </div>
+                      </div>
                 )}
 
                 {comedianProfile?.username && (
@@ -300,8 +300,8 @@ export default function DashboardPage() {
                   <Button variant="secondary" className="w-full mt-6">
                     <Edit className="w-4 h-4 mr-2" />
                     Complete Your Profile
-                  </Button>
-                </Link>
+                </Button>
+              </Link>
               )}
             </Card>
 
@@ -321,14 +321,14 @@ export default function DashboardPage() {
                     <BookOpen className="w-8 h-8 text-[#F72585] mb-3" />
                     <h3 className="font-medium text-white group-hover:text-[#F72585] transition-colors">Browse Courses</h3>
                     <p className="text-sm text-[#A0A0A0]">Learn from the pros</p>
-                  </div>
+              </div>
                 </Link>
                 <Link href="/community" className="group">
                   <div className="p-4 rounded-xl bg-[#00F5D4]/5 border border-[#00F5D4]/10 hover:border-[#00F5D4]/30 transition-colors">
                     <MessageSquare className="w-8 h-8 text-[#00F5D4] mb-3" />
                     <h3 className="font-medium text-white group-hover:text-[#00F5D4] transition-colors">Join Community</h3>
                     <p className="text-sm text-[#A0A0A0]">Connect with comedians</p>
-                  </div>
+                      </div>
                 </Link>
                 <Link href="/for-venues/find-talent" className="group">
                   <div className="p-4 rounded-xl bg-[#FFB627]/5 border border-[#FFB627]/10 hover:border-[#FFB627]/30 transition-colors">
@@ -345,7 +345,7 @@ export default function DashboardPage() {
           <div className="space-y-8">
             {/* Video Clips */}
             {comedianProfile?.video_clips && comedianProfile.video_clips.length > 0 ? (
-              <Card variant="glass" hover={false}>
+            <Card variant="glass" hover={false}>
                 <h2 className="text-lg font-semibold text-white mb-4">Your Video Clips</h2>
                 <div className="space-y-3">
                   {comedianProfile.video_clips.slice(0, 3).map((clip, index) => (
@@ -358,7 +358,7 @@ export default function DashboardPage() {
                     >
                       <div className="w-10 h-10 rounded-lg bg-[#7B2FF7]/20 flex items-center justify-center">
                         <Mic className="w-5 h-5 text-[#7B2FF7]" />
-                      </div>
+                  </div>
                       <span className="text-sm text-white truncate">{clip.title}</span>
                     </a>
                   ))}
@@ -368,9 +368,9 @@ export default function DashboardPage() {
                     Manage Clips
                   </Button>
                 </Link>
-              </Card>
+            </Card>
             ) : (
-              <Card variant="glass" hover={false}>
+            <Card variant="glass" hover={false}>
                 <h2 className="text-lg font-semibold text-white mb-4">Video Clips</h2>
                 <p className="text-[#A0A0A0] text-sm mb-4">
                   Add links to your sets so venues can see your work!
@@ -381,7 +381,7 @@ export default function DashboardPage() {
                     Add Video Clips
                   </Button>
                 </Link>
-              </Card>
+            </Card>
             )}
 
             {/* Quick Links */}
@@ -410,13 +410,13 @@ export default function DashboardPage() {
                   <span className="text-[#A0A0A0] hover:text-white">Find Open Mics</span>
                 </Link>
                 {comedianProfile?.username && (
-                  <Link
+                <Link
                     href={`/comedians/${comedianProfile.username}`}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
-                  >
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                >
                     <ArrowRight className="w-5 h-5 text-[#FFB627]" />
                     <span className="text-[#A0A0A0] hover:text-white">View Public Profile</span>
-                  </Link>
+                </Link>
                 )}
               </div>
             </Card>

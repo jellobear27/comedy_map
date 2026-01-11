@@ -1,0 +1,17 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="180" rx="40" fill="#0f0f0f"/>
+  <g transform="translate(45, 27) scale(3.75)">
+    <path d="M12 1a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0V5a4 4 0 0 0-4-4Z" stroke="url(#gApple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M19 10v1a7 7 0 0 1-14 0v-1" stroke="url(#gApple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M12 17v4" stroke="url(#gApple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 21h8" stroke="url(#gApple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <defs>
+    <linearGradient id="gApple" x1="7.5" y1="1" x2="16.5" y2="23" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7B2FF7"/>
+      <stop offset="0.5" stop-color="#F72585"/>
+      <stop offset="1" stop-color="#FF6B6B"/>
+    </linearGradient>
+  </defs>
+</svg>
+

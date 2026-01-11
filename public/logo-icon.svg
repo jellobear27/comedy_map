@@ -1,0 +1,66 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="64" fill="#0f0f0f"/>
+  
+  <!-- Microphone -->
+  <g transform="translate(128, 80) scale(10.67)">
+    <!-- Mic body -->
+    <path
+      d="M12 1a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0V5a4 4 0 0 0-4-4Z"
+      stroke="url(#grad)"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+    <!-- Mic arc -->
+    <path
+      d="M19 10v1a7 7 0 0 1-14 0v-1"
+      stroke="url(#grad)"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+    <!-- Mic stand -->
+    <path
+      d="M12 17v4"
+      stroke="url(#grad)"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <!-- Mic base -->
+    <path
+      d="M8 21h8"
+      stroke="url(#grad)"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <!-- Mic detail lines -->
+    <path
+      d="M12 5v6"
+      stroke="url(#grad)"
+      stroke-width="1"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M10 7h4"
+      stroke="url(#grad)"
+      stroke-width="1"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+  
+  <defs>
+    <linearGradient id="grad" x1="7.5" y1="1" x2="16.5" y2="23" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7B2FF7"/>
+      <stop offset="0.5" stop-color="#F72585"/>
+      <stop offset="1" stop-color="#FF6B6B"/>
+    </linearGradient>
+  </defs>
+</svg>
+
