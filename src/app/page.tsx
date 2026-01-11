@@ -4,6 +4,7 @@ import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import { FEATURES } from '@/config/features'
+import TheatricalIntro from '@/components/three/TheatricalIntro'
 
 const features = [
   {
@@ -63,6 +64,9 @@ const stats = [
 export default function HomePage() {
   return (
     <div className="relative">
+      {/* Theatrical 3D Intro Animation */}
+      <TheatricalIntro />
+      
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background Effects */}
