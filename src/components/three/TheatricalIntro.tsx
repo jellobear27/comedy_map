@@ -1,54 +1,71 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 
 // Dynamically import the 3D scene to avoid SSR issues
 const OpenMicsExplosion = dynamic(
   () => import('./OpenMicsExplosion'),
-  { ssr: false }
+  { 
+    ssr: false,
+    // No loading spinner - just show black background
+    loading: () => null
+  }
 )
 
+// Maximum time to show intro before forcing completion (2.5 seconds)
+const MAX_INTRO_DURATION = 2500
+
 export default function TheatricalIntro() {
-  const [showAnimation, setShowAnimation] = useState(false)
-  const [animationComplete, setAnimationComplete] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [fadeOut, setFadeOut] = useState(false)
+  const [removed, setRemoved] = useState(false)
+  const hasCompleted = useRef(false)
 
-  useEffect(() => {
-    // Check if we've already shown the animation this session
-    const hasAnimated = sessionStorage.getItem('theatricalIntroPlayed')
+  const handleComplete = useCallback(() => {
+    // Prevent double-calling
+    if (hasCompleted.current) return
+    hasCompleted.current = true
     
-    if (!hasAnimated) {
-      setShowAnimation(true)
-      sessionStorage.setItem('theatricalIntroPlayed', 'true')
-    }
-  }, [])
-
-  const handleComplete = () => {
-    // Start fade out
+    // Immediately start fade - no delay
     setFadeOut(true)
     
-    // Remove after fade
+    // Remove from DOM almost instantly
     setTimeout(() => {
-      setAnimationComplete(true)
-    }, 1000)
-  }
+      setRemoved(true)
+    }, 300)
+  }, [])
 
-  if (!showAnimation || animationComplete) return null
+  useEffect(() => {
+    setMounted(true)
+    
+    // FAILSAFE: Force complete after max duration
+    const failsafeTimer = setTimeout(() => {
+      if (!hasCompleted.current) {
+        handleComplete()
+      }
+    }, MAX_INTRO_DURATION)
+    
+    return () => clearTimeout(failsafeTimer)
+  }, [handleComplete])
+
+  // Remove from DOM entirely once done
+  if (removed) return null
 
   return (
     <div 
       className={`
-        fixed inset-0 z-[200] bg-[#050505] transition-opacity duration-1000
-        ${fadeOut ? 'opacity-0' : 'opacity-100'}
+        fixed inset-0 z-200 bg-[#050505] 
+        transition-opacity duration-300 ease-out
+        ${fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'}
       `}
     >
-      <OpenMicsExplosion onComplete={handleComplete} />
+      {mounted && <OpenMicsExplosion onComplete={handleComplete} />}
       
       {/* Skip button */}
       <button
         onClick={handleComplete}
-        className="absolute bottom-8 right-8 text-[#A0A0A0] hover:text-white text-sm transition-colors z-[201]"
+        className="absolute bottom-8 right-8 text-[#A0A0A0] hover:text-white text-sm transition-colors z-201 pointer-events-auto"
       >
         Skip →
       </button>

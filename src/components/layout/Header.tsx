@@ -83,10 +83,10 @@ export default function Header({ user }: HeaderProps) {
               const isTheatrical = isOpenMics && showOpenMicsAnimation && pathname === '/'
               
               return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`
                     relative font-medium transition-all
                     ${isTheatrical 
                       ? `
@@ -100,26 +100,26 @@ export default function Header({ user }: HeaderProps) {
                         shadow-[#F72585]/50
                       `
                       : `text-sm ${pathname === link.href 
-                          ? 'text-white' 
-                          : 'text-[#A0A0A0] hover:text-white'
+                    ? 'text-white' 
+                    : 'text-[#A0A0A0] hover:text-white'
                         }`
-                    }
-                  `}
+                  }
+                `}
                   style={isTheatrical ? {
                     textShadow: '0 0 20px rgba(247, 37, 133, 0.8)',
                   } : {}}
-                >
+              >
                   {isTheatrical && animationPhase === 'settle' && (
                     <Sparkles className="inline-block w-5 h-5 mr-2 animate-pulse" />
                   )}
-                  {link.label}
+                {link.label}
                   {isTheatrical && animationPhase === 'settle' && (
                     <Sparkles className="inline-block w-5 h-5 ml-2 animate-pulse" />
                   )}
                   {pathname === link.href && !isTheatrical && (
-                    <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-[#7B2FF7] to-[#F72585] rounded-full" />
-                  )}
-                </Link>
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-[#7B2FF7] to-[#F72585] rounded-full" />
+                )}
+              </Link>
               )
             })}
           </div>

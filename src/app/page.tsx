@@ -3,6 +3,8 @@ import { MapPin, Mic, BookOpen, Users, Zap, ArrowRight, Star, Calendar, Trending
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
+import PageReveal from '@/components/ui/PageReveal'
+import Fireflies from '@/components/ui/Fireflies'
 import { FEATURES } from '@/config/features'
 import TheatricalIntro from '@/components/three/TheatricalIntro'
 
@@ -67,6 +69,11 @@ export default function HomePage() {
       {/* Theatrical 3D Intro Animation */}
       <TheatricalIntro />
       
+      {/* Ambient fireflies */}
+      <Fireflies count={18} />
+      
+      {/* Page content with reveal animation */}
+      <PageReveal delay={1600} duration={800} variant="wipe-up">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background Effects */}
@@ -491,6 +498,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </PageReveal>
     </div>
   )
 }
