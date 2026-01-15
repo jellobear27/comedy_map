@@ -487,55 +487,27 @@ function ElectricArcs({ visible }: { visible: boolean }) {
   )
 }
 
-// Time to wait for scene to fully load before starting animation
-const SCENE_LOAD_DELAY = 500
-
-// Main scene - uses absolute timing from animation start
-function Scene({ 
-  onAnimationComplete,
-  onSceneReady 
-}: { 
-  onAnimationComplete: () => void
-  onSceneReady?: () => void
-}) {
-  const [sceneReady, setSceneReady] = useState(false)
+// Main scene - starts animation immediately for snappy experience
+function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
   const [animationStartTime, setAnimationStartTime] = useState(0)
   const [showLogo, setShowLogo] = useState(false)
   const [showText, setShowText] = useState(false)
   const [showArcs, setShowArcs] = useState(false)
   const [showSecondary, setShowSecondary] = useState(false)
   const hasCompletedAnimation = useRef(false)
-  const hasSignaledReady = useRef(false)
   const frameCount = useRef(0)
+  const hasStarted = useRef(false)
   
-  // Wait for scene to render a few frames before starting animation
+  // Start animation after first few frames render (ensures scene is visible)
   useFrame(() => {
-    if (!sceneReady) {
+    if (!hasStarted.current) {
       frameCount.current++
-      // Wait for at least 10 frames to ensure scene is fully rendered
-      if (frameCount.current >= 10) {
-        setSceneReady(true)
-        // Signal to parent that scene is ready
-        if (!hasSignaledReady.current && onSceneReady) {
-          hasSignaledReady.current = true
-          onSceneReady()
-        }
+      if (frameCount.current >= 3) {
+        hasStarted.current = true
+        setAnimationStartTime(Date.now())
       }
     }
   })
-  
-  // Start animation AFTER scene is ready
-  useEffect(() => {
-    if (!sceneReady) return
-    
-    // Add delay after scene ready to let user see the particles
-    const startDelay = setTimeout(() => {
-      const startTime = Date.now()
-      setAnimationStartTime(startTime)
-    }, SCENE_LOAD_DELAY)
-    
-    return () => clearTimeout(startDelay)
-  }, [sceneReady])
   
   // Animation timers - only start after animationStartTime is set
   useEffect(() => {
@@ -708,22 +680,11 @@ function ResponsiveCamera() {
   return null
 }
 
-// Loading fallback
-function Loader() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="w-16 h-16 rounded-full border-4 border-[#7B2FF7] border-t-transparent animate-spin" />
-    </div>
-  )
-}
-
 // Main component
 export default function OpenMicsExplosion({ 
-  onComplete,
-  onSceneReady
+  onComplete 
 }: { 
-  onComplete?: () => void
-  onSceneReady?: () => void
+  onComplete?: () => void 
 }) {
   const [isClient, setIsClient] = useState(false)
   
@@ -733,35 +694,23 @@ export default function OpenMicsExplosion({
   
   if (!isClient) return null
   
-  // Cap device pixel ratio to avoid excessive GPU load on high-DPI mobile devices
+  // Cap DPR for performance
   const pixelRatio = typeof window !== 'undefined' 
     ? Math.min(window.devicePixelRatio, 2) 
     : 1
   
   return (
     <div className="fixed inset-0 z-100 pointer-events-none">
-      <Suspense fallback={<Loader />}>
+      <Suspense fallback={null}>
         <Canvas
           camera={{ position: [0, 0, 6], fov: 50 }}
-          style={{ 
-            background: 'transparent',
-            width: '100%',
-            height: '100%',
-            display: 'block',
-          }}
+          style={{ background: 'transparent', width: '100%', height: '100%', display: 'block' }}
           dpr={pixelRatio}
-          gl={{ 
-            alpha: true, 
-            antialias: true,
-            powerPreference: 'high-performance',
-          }}
+          gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
           resize={{ scroll: false, debounce: { scroll: 50, resize: 50 } }}
         >
           <ResponsiveCamera />
-          <Scene 
-            onAnimationComplete={onComplete || (() => {})} 
-            onSceneReady={onSceneReady}
-          />
+          <Scene onAnimationComplete={onComplete || (() => {})} />
         </Canvas>
       </Suspense>
     </div>
