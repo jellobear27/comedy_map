@@ -487,19 +487,47 @@ function ElectricArcs({ visible }: { visible: boolean }) {
   )
 }
 
+// Time to wait for scene to fully load before starting animation
+const SCENE_LOAD_DELAY = 500
+
 // Main scene - uses absolute timing from animation start
 function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
+  const [sceneReady, setSceneReady] = useState(false)
   const [animationStartTime, setAnimationStartTime] = useState(0)
   const [showLogo, setShowLogo] = useState(false)
   const [showText, setShowText] = useState(false)
   const [showArcs, setShowArcs] = useState(false)
   const [showSecondary, setShowSecondary] = useState(false)
   const hasCompletedAnimation = useRef(false)
+  const frameCount = useRef(0)
   
-  // Start animation on mount
+  // Wait for scene to render a few frames before starting animation
+  useFrame(() => {
+    if (!sceneReady) {
+      frameCount.current++
+      // Wait for at least 10 frames to ensure scene is fully rendered
+      if (frameCount.current >= 10) {
+        setSceneReady(true)
+      }
+    }
+  })
+  
+  // Start animation AFTER scene is ready
   useEffect(() => {
-    const startTime = Date.now()
-    setAnimationStartTime(startTime)
+    if (!sceneReady) return
+    
+    // Add delay after scene ready to let user see the particles
+    const startDelay = setTimeout(() => {
+      const startTime = Date.now()
+      setAnimationStartTime(startTime)
+    }, SCENE_LOAD_DELAY)
+    
+    return () => clearTimeout(startDelay)
+  }, [sceneReady])
+  
+  // Animation timers - only start after animationStartTime is set
+  useEffect(() => {
+    if (animationStartTime === 0) return
     
     // Show arcs during particle reformation
     const arcsTimer = setTimeout(() => {
@@ -532,7 +560,7 @@ function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
       clearTimeout(forceLogoTimer)
       clearTimeout(completeTimer)
     }
-  }, [onAnimationComplete])
+  }, [animationStartTime, onAnimationComplete])
   
   // Handle reform complete - show logo and text
   const handleReformComplete = () => {

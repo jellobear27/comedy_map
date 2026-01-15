@@ -13,9 +13,9 @@ const OpenMicsExplosion = dynamic(
   }
 )
 
-// Maximum time to show intro before forcing completion (1.8 seconds)
-// Animation is 1.5s + 300ms fade = 1.8s max
-const MAX_INTRO_DURATION = 1800
+// Maximum time to show intro before forcing completion
+// Scene load (500ms) + Animation (1.5s) + Fade (300ms) = ~2.5s max
+const MAX_INTRO_DURATION = 2500
 
 export default function TheatricalIntro() {
   const [mounted, setMounted] = useState(false)
