@@ -491,7 +491,13 @@ function ElectricArcs({ visible }: { visible: boolean }) {
 const SCENE_LOAD_DELAY = 500
 
 // Main scene - uses absolute timing from animation start
-function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
+function Scene({ 
+  onAnimationComplete,
+  onSceneReady 
+}: { 
+  onAnimationComplete: () => void
+  onSceneReady?: () => void
+}) {
   const [sceneReady, setSceneReady] = useState(false)
   const [animationStartTime, setAnimationStartTime] = useState(0)
   const [showLogo, setShowLogo] = useState(false)
@@ -499,6 +505,7 @@ function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
   const [showArcs, setShowArcs] = useState(false)
   const [showSecondary, setShowSecondary] = useState(false)
   const hasCompletedAnimation = useRef(false)
+  const hasSignaledReady = useRef(false)
   const frameCount = useRef(0)
   
   // Wait for scene to render a few frames before starting animation
@@ -508,6 +515,11 @@ function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
       // Wait for at least 10 frames to ensure scene is fully rendered
       if (frameCount.current >= 10) {
         setSceneReady(true)
+        // Signal to parent that scene is ready
+        if (!hasSignaledReady.current && onSceneReady) {
+          hasSignaledReady.current = true
+          onSceneReady()
+        }
       }
     }
   })
@@ -707,9 +719,11 @@ function Loader() {
 
 // Main component
 export default function OpenMicsExplosion({ 
-  onComplete 
+  onComplete,
+  onSceneReady
 }: { 
-  onComplete?: () => void 
+  onComplete?: () => void
+  onSceneReady?: () => void
 }) {
   const [isClient, setIsClient] = useState(false)
   
@@ -744,7 +758,10 @@ export default function OpenMicsExplosion({
           resize={{ scroll: false, debounce: { scroll: 50, resize: 50 } }}
         >
           <ResponsiveCamera />
-          <Scene onAnimationComplete={onComplete || (() => {})} />
+          <Scene 
+            onAnimationComplete={onComplete || (() => {})} 
+            onSceneReady={onSceneReady}
+          />
         </Canvas>
       </Suspense>
     </div>

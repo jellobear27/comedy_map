@@ -8,17 +8,22 @@ const OpenMicsExplosion = dynamic(
   () => import('./OpenMicsExplosion'),
   { 
     ssr: false,
-    // No loading spinner - just show black background
-    loading: () => null
+    // Show loading indicator while chunk downloads
+    loading: () => (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-2 border-[#7B2FF7] border-t-transparent animate-spin opacity-50" />
+      </div>
+    )
   }
 )
 
 // Maximum time to show intro before forcing completion
-// Scene load (500ms) + Animation (1.5s) + Fade (300ms) = ~2.5s max
-const MAX_INTRO_DURATION = 2500
+// Give enough time for cold start: chunk download + WebGL init + animation
+const MAX_INTRO_DURATION = 8000
 
 export default function TheatricalIntro() {
   const [mounted, setMounted] = useState(false)
+  const [sceneStarted, setSceneStarted] = useState(false)
   const [fadeOut, setFadeOut] = useState(false)
   const [removed, setRemoved] = useState(false)
   const hasCompleted = useRef(false)
@@ -37,12 +42,18 @@ export default function TheatricalIntro() {
     }, 300)
   }, [])
 
+  // Called when the scene signals it has started rendering
+  const handleSceneReady = useCallback(() => {
+    setSceneStarted(true)
+  }, [])
+
   useEffect(() => {
     setMounted(true)
     
-    // FAILSAFE: Force complete after max duration
+    // FAILSAFE: Force complete after max duration (for slow connections)
     const failsafeTimer = setTimeout(() => {
       if (!hasCompleted.current) {
+        console.warn('TheatricalIntro: Failsafe triggered after', MAX_INTRO_DURATION, 'ms')
         handleComplete()
       }
     }, MAX_INTRO_DURATION)
@@ -61,7 +72,12 @@ export default function TheatricalIntro() {
         ${fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'}
       `}
     >
-      {mounted && <OpenMicsExplosion onComplete={handleComplete} />}
+      {mounted && (
+        <OpenMicsExplosion 
+          onComplete={handleComplete} 
+          onSceneReady={handleSceneReady}
+        />
+      )}
       
       {/* Skip button */}
       <button
