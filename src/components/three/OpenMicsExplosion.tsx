@@ -23,20 +23,19 @@ const PARTICLE_COLORS = [
 
 // ============================================
 // ANIMATION TIMING CONSTANTS (in milliseconds)
-// Ultra-snappy - immediate transition to page
+// FULL 1.5 SECONDS of theatrical mic animation
+// Then IMMEDIATE transition (no purple circle wait)
 // ============================================
 const TIMING = {
-  INITIAL_DELAY: 200,        // Brief pause before particles move
-  PARTICLE_REFORM: 1200,     // Particles form quickly
-  ARCS_DURATION: 1400,       // Electric arcs
-  LOGO_FADE_IN: 400,         // Logo appears fast
-  HOLD_BEFORE_EXIT: 0,       // NO hold - immediate transition
+  INITIAL_DELAY: 300,        // Brief anticipation - particles drift
+  PARTICLE_REFORM: 900,      // Graceful particle reformation
+  ARCS_DURATION: 1000,       // Electric arcs during reform
+  LOGO_FADE_IN: 300,         // Logo fades in elegantly
+  HOLD_AFTER_LOGO: 200,      // Brief moment to appreciate
 }
 
-// Complete as soon as logo appears
-const MIN_ANIMATION_DURATION = 
-  TIMING.INITIAL_DELAY + 
-  TIMING.PARTICLE_REFORM
+// Total animation: 1500ms (1.5 seconds) exactly
+const MIN_ANIMATION_DURATION = 1500
 
 // The actual logo SVG rendered in 3D space
 function LogoDisplay({ 
@@ -273,27 +272,31 @@ function ScatterParticles({
     const reformEndTime = TIMING.INITIAL_DELAY + TIMING.PARTICLE_REFORM
     
     if (elapsed < reformStartTime) {
-      // Still in initial delay - particles stay scattered but drift slightly
+      // Initial delay - particles drift slowly, creating anticipation
       const driftTime = elapsed / 1000
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3
-        positions.array[i3] = scatteredPositions.current[i3] + Math.sin(driftTime + i * 0.1) * 0.1
-        positions.array[i3 + 1] = scatteredPositions.current[i3 + 1] + Math.cos(driftTime + i * 0.1) * 0.1
+        // Slow, gentle drift - inviting the user in
+        positions.array[i3] = scatteredPositions.current[i3] + Math.sin(driftTime * 0.3 + i * 0.03) * 0.2
+        positions.array[i3 + 1] = scatteredPositions.current[i3 + 1] + Math.cos(driftTime * 0.3 + i * 0.03) * 0.2
+        positions.array[i3 + 2] = scatteredPositions.current[i3 + 2] + Math.sin(driftTime * 0.2 + i * 0.02) * 0.1
       }
       positions.needsUpdate = true
     } else if (elapsed < reformEndTime) {
-      // Reforming phase
+      // Reforming phase - slow, graceful, theatrical movement
       const reformElapsed = elapsed - reformStartTime
       const reformDuration = TIMING.PARTICLE_REFORM
       const progress = reformElapsed / reformDuration
       
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3
-        // Add slight delay per particle for wave effect
-        const particleDelay = (i / particleCount) * 0.3
+        // Staggered delay per particle for flowing wave effect
+        const particleDelay = (i / particleCount) * 0.5
         const particleProgress = Math.max(0, Math.min(1, (progress - particleDelay) / (1 - particleDelay)))
-        // Smooth ease-out cubic
-        const particleEased = 1 - Math.pow(1 - particleProgress, 3)
+        // Smooth ease-in-out-quint for buttery smooth movement
+        const particleEased = particleProgress < 0.5
+          ? 16 * particleProgress * particleProgress * particleProgress * particleProgress * particleProgress
+          : 1 - Math.pow(-2 * particleProgress + 2, 5) / 2
         
         positions.array[i3] = scatteredPositions.current[i3] + 
           (originalPositions.current[i3] - scatteredPositions.current[i3]) * particleEased
@@ -376,7 +379,8 @@ function SecondaryParticles({ visible }: { visible: boolean }) {
   
   useFrame(({ clock }) => {
     if (particlesRef.current && visible) {
-      particlesRef.current.rotation.y = clock.elapsedTime * 0.08
+      // Slow, graceful orbit
+      particlesRef.current.rotation.y = clock.elapsedTime * 0.03
     }
   })
   
@@ -388,11 +392,11 @@ function SecondaryParticles({ visible }: { visible: boolean }) {
       <pointsMaterial
         size={0.06}
         vertexColors
-        transparent
-        opacity={0.8}
+          transparent
+          opacity={0.8}
         sizeAttenuation
         blending={THREE.AdditiveBlending}
-      />
+        />
     </points>
   )
 }
@@ -423,26 +427,26 @@ function OpenMicsText({ visible }: { visible: boolean }) {
   if (!visible) return null
   
   return (
-    <Text
-      ref={textRef}
+      <Text
+        ref={textRef}
       fontSize={0.5}
-      color="#FFFFFF"
-      anchorX="center"
-      anchorY="middle"
+        color="#FFFFFF"
+        anchorX="center"
+        anchorY="middle"
       position={[0, -2.8, 0]}
-      font="/fonts/Sora-Bold.woff"
+        font="/fonts/Sora-Bold.woff"
       outlineWidth={0.012}
-      outlineColor="#7B2FF7"
-    >
-      OPEN MICS
-      <meshStandardMaterial 
-        color="#FFFFFF" 
-        emissive="#F72585"
+        outlineColor="#7B2FF7"
+      >
+        OPEN MICS
+        <meshStandardMaterial 
+          color="#FFFFFF" 
+          emissive="#F72585"
         emissiveIntensity={0.3}
-        transparent
-        opacity={opacity}
-      />
-    </Text>
+          transparent
+          opacity={opacity}
+        />
+      </Text>
   )
 }
 
@@ -452,7 +456,8 @@ function ElectricArcs({ visible }: { visible: boolean }) {
   
   useFrame(({ clock }) => {
     if (arcsRef.current && visible) {
-      arcsRef.current.rotation.z = clock.elapsedTime * 0.4
+      // Slow, graceful rotation
+      arcsRef.current.rotation.z = clock.elapsedTime * 0.2
     }
   })
   
@@ -506,26 +511,26 @@ function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
       setShowArcs(false)
     }, TIMING.INITIAL_DELAY + TIMING.ARCS_DURATION)
     
-    // FAILSAFE: Force show logo after particles should be done
+    // Show logo after particles reform (around 1.2s)
     const forceLogoTimer = setTimeout(() => {
       setShowLogo(true)
       setShowSecondary(true)
       setShowText(true)
     }, TIMING.INITIAL_DELAY + TIMING.PARTICLE_REFORM)
     
-    // FAILSAFE: Absolute maximum - force complete after 2 seconds
-    const maxDurationTimer = setTimeout(() => {
+    // Complete animation at exactly 1.5 seconds - IMMEDIATE transition, no waiting
+    const completeTimer = setTimeout(() => {
       if (!hasCompletedAnimation.current) {
         hasCompletedAnimation.current = true
         onAnimationComplete()
       }
-    }, 2000)
+    }, MIN_ANIMATION_DURATION)
     
     return () => {
       clearTimeout(arcsTimer)
       clearTimeout(hideArcsTimer)
       clearTimeout(forceLogoTimer)
-      clearTimeout(maxDurationTimer)
+      clearTimeout(completeTimer)
     }
   }, [onAnimationComplete])
   
@@ -542,11 +547,11 @@ function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
     
     const elapsed = Date.now() - animationStartTime
     
-    // Complete when minimum duration passed AND logo is showing
-    if (elapsed >= MIN_ANIMATION_DURATION && showLogo) {
+    // Complete at exactly 1.5 seconds - no waiting for logo
+    if (elapsed >= MIN_ANIMATION_DURATION) {
       hasCompletedAnimation.current = true
       onAnimationComplete()
-    }
+  }
   })
   
   return (
@@ -568,12 +573,12 @@ function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
         speed={0.8}
       />
       
-      {/* Ambient sparkles - matching firefly colors */}
+      {/* Ambient sparkles - slow, dreamy, matching firefly colors */}
       <Sparkles
         count={80}
         scale={10}
         size={2.5}
-        speed={0.2}
+        speed={0.08}
         color="#F72585"
       />
       
@@ -581,7 +586,7 @@ function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
         count={60}
         scale={9}
         size={2}
-        speed={0.15}
+        speed={0.06}
         color="#7B2FF7"
       />
       
@@ -589,7 +594,7 @@ function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
         count={40}
         scale={8}
         size={2}
-        speed={0.18}
+        speed={0.07}
         color="#00F5D4"
       />
       
@@ -597,7 +602,7 @@ function Scene({ onAnimationComplete }: { onAnimationComplete: () => void }) {
         count={30}
         scale={7}
         size={1.8}
-        speed={0.22}
+        speed={0.09}
         color="#FFB627"
       />
       

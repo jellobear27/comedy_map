@@ -73,7 +73,7 @@ export default function HomePage() {
       <Fireflies count={18} />
       
       {/* Page content with reveal animation */}
-      <PageReveal delay={1600} duration={800} variant="wipe-up">
+      <PageReveal delay={1600} duration={600} variant="wipe-up">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background Effects */}
