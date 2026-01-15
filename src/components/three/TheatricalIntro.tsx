@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import dynamic from 'next/dynamic'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 
-// Dynamically import the 3D scene to avoid SSR issues
-const OpenMicsExplosion = dynamic(
-  () => import('./OpenMicsExplosion'),
-  { ssr: false }
-)
+// Lazy load Three.js component - starts loading immediately when this module loads
+const OpenMicsExplosion = lazy(() => import('./OpenMicsExplosion'))
 
-// Failsafe: if scene never loads, skip after 4 seconds
-const SCENE_LOAD_TIMEOUT = 4000
+// Start preloading the chunk immediately (before component mounts)
+if (typeof window !== 'undefined') {
+  import('./OpenMicsExplosion')
+}
+
+// Failsafe: if scene never loads, skip after 3 seconds
+const SCENE_LOAD_TIMEOUT = 3000
 
 export default function TheatricalIntro() {
   const [mounted, setMounted] = useState(false)
@@ -28,7 +29,7 @@ export default function TheatricalIntro() {
   useEffect(() => {
     setMounted(true)
     
-    // Failsafe: skip if scene never loads (slow connection)
+    // Failsafe: skip if scene never loads
     const failsafe = setTimeout(() => {
       if (!hasCompleted.current) handleComplete()
     }, SCENE_LOAD_TIMEOUT)
@@ -46,7 +47,11 @@ export default function TheatricalIntro() {
         ${fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'}
       `}
     >
-      {mounted && <OpenMicsExplosion onComplete={handleComplete} />}
+      {mounted && (
+        <Suspense fallback={null}>
+          <OpenMicsExplosion onComplete={handleComplete} />
+        </Suspense>
+      )}
     </div>
   )
 }
