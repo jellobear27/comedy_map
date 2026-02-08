@@ -69,6 +69,44 @@ export interface EventHype {
   created_at: string
 }
 
+// Roast Thread types
+export interface RoastThread {
+  id: string
+  user_id: string
+  title: string
+  description?: string
+  photo_url?: string
+  is_active: boolean
+  roast_count: number
+  best_roast_id?: string
+  created_at: string
+  closed_at?: string
+  author?: User
+}
+
+export interface Roast {
+  id: string
+  thread_id: string
+  author_id: string
+  content: string
+  fire_count: number
+  is_reported: boolean
+  is_hidden: boolean
+  created_at: string
+  author?: User
+}
+
+export interface RoastReport {
+  id: string
+  roast_id: string
+  reporter_id: string
+  reason: 'harassment' | 'racism' | 'homophobia' | 'personal_attack' | 'other'
+  details?: string
+  status: 'pending' | 'reviewed' | 'action_taken' | 'dismissed'
+  created_at: string
+  reviewed_at?: string
+}
+
 export interface User {
   id: string
   email: string

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, MessageSquare, Heart, Share2, Bookmark, TrendingUp, Clock, Users, Plus, Mic, Sparkles } from 'lucide-react'
+import { Search, MessageSquare, Heart, Share2, Bookmark, TrendingUp, Clock, Users, Plus, Mic, Sparkles, Flame } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
@@ -149,7 +149,7 @@ export default function CommunityPage() {
           </div>
 
           {/* Forum Tabs */}
-          <div className="flex justify-center gap-4 mb-8">
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
             <Button size="sm">
               <Mic className="w-4 h-4 mr-2" />
               Comedian Forum
@@ -158,6 +158,12 @@ export default function CommunityPage() {
               <Button variant="secondary" size="sm">
                 <Heart className="w-4 h-4 mr-2" />
                 Superfan Zone
+              </Button>
+            </Link>
+            <Link href="/community/roast-me">
+              <Button variant="secondary" size="sm" className="border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/10">
+                <Flame className="w-4 h-4 mr-2 text-[#FF6B6B]" />
+                Roast Me 🔥
               </Button>
             </Link>
           </div>
