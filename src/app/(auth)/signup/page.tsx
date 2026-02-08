@@ -3,13 +3,13 @@
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Mail, Lock, User, Eye, EyeOff, Mic, Building2 } from 'lucide-react'
+import { Mail, Lock, User, Eye, EyeOff, Mic, Building2, Heart } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Logo from '@/components/ui/Logo'
 import { createClient } from '@/lib/supabase/client'
 
-type UserRole = 'comedian' | 'venue'
+type UserRole = 'comedian' | 'venue' | 'superfan'
 
 function SignupForm() {
   const router = useRouter()
@@ -155,7 +155,7 @@ function SignupForm() {
           </p>
 
           {/* Role Selector */}
-          <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-3 gap-3 mb-8">
             <button
               type="button"
               onClick={() => setRole('comedian')}
@@ -167,8 +167,8 @@ function SignupForm() {
                 }
               `}
             >
-              <Mic className={`w-8 h-8 mx-auto mb-2 ${role === 'comedian' ? 'text-[#7B2FF7]' : 'text-[#A0A0A0]'}`} />
-              <span className={`font-medium ${role === 'comedian' ? 'text-white' : 'text-[#A0A0A0]'}`}>
+              <Mic className={`w-7 h-7 mx-auto mb-2 ${role === 'comedian' ? 'text-[#7B2FF7]' : 'text-[#A0A0A0]'}`} />
+              <span className={`text-sm font-medium ${role === 'comedian' ? 'text-white' : 'text-[#A0A0A0]'}`}>
                 Comedian
               </span>
             </button>
@@ -183,9 +183,25 @@ function SignupForm() {
                 }
               `}
             >
-              <Building2 className={`w-8 h-8 mx-auto mb-2 ${role === 'venue' ? 'text-[#F72585]' : 'text-[#A0A0A0]'}`} />
-              <span className={`font-medium ${role === 'venue' ? 'text-white' : 'text-[#A0A0A0]'}`}>
+              <Building2 className={`w-7 h-7 mx-auto mb-2 ${role === 'venue' ? 'text-[#F72585]' : 'text-[#A0A0A0]'}`} />
+              <span className={`text-sm font-medium ${role === 'venue' ? 'text-white' : 'text-[#A0A0A0]'}`}>
                 Venue
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('superfan')}
+              className={`
+                p-4 rounded-xl border-2 transition-all duration-300 text-center
+                ${role === 'superfan'
+                  ? 'border-[#00F5D4] bg-[#00F5D4]/10'
+                  : 'border-[#7B2FF7]/20 hover:border-[#7B2FF7]/50'
+                }
+              `}
+            >
+              <Heart className={`w-7 h-7 mx-auto mb-2 ${role === 'superfan' ? 'text-[#00F5D4]' : 'text-[#A0A0A0]'}`} />
+              <span className={`text-sm font-medium ${role === 'superfan' ? 'text-white' : 'text-[#A0A0A0]'}`}>
+                Superfan
               </span>
             </button>
           </div>
@@ -200,8 +216,8 @@ function SignupForm() {
             <Input
               id="fullName"
               type="text"
-              label={role === 'venue' ? 'Venue Name' : 'Full Name'}
-              placeholder={role === 'venue' ? 'The Comedy Club' : 'John Doe'}
+              label={role === 'venue' ? 'Venue Name' : role === 'superfan' ? 'Display Name' : 'Full Name'}
+              placeholder={role === 'venue' ? 'The Comedy Club' : role === 'superfan' ? 'ComedyLover42' : 'John Doe'}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               icon={<User className="w-5 h-5" />}
@@ -252,10 +268,16 @@ function SignupForm() {
 
             <Button 
               type="submit" 
-              className={`w-full ${role === 'venue' ? 'bg-gradient-to-r from-[#F72585] to-[#FFB627]' : ''}`} 
+              className={`w-full ${
+                role === 'venue' 
+                  ? 'bg-gradient-to-r from-[#F72585] to-[#FFB627]' 
+                  : role === 'superfan' 
+                    ? 'bg-gradient-to-r from-[#00F5D4] to-[#7B2FF7]' 
+                    : ''
+              }`} 
               isLoading={isLoading}
             >
-              Create Account
+              {role === 'superfan' ? 'Join the Fan Club' : 'Create Account'}
             </Button>
           </form>
 

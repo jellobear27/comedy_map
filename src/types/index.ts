@@ -1,4 +1,73 @@
-export type UserRole = 'comedian' | 'venue' | 'host' | 'promoter'
+export type UserRole = 'comedian' | 'venue' | 'host' | 'promoter' | 'superfan'
+
+// Superfan-specific types
+export interface SuperfanProfile {
+  id: string
+  favorite_comedians?: string[]
+  shows_attended: number
+  badges: SuperfanBadge[]
+  membership_tier: 'free' | 'premium'
+  premium_until?: string
+}
+
+export interface SuperfanBadge {
+  id: string
+  type: BadgeType
+  name: string
+  description: string
+  icon: string
+  earned_at: string
+}
+
+export type BadgeType = 
+  | 'first_show'      // Attended first show
+  | 'regular'         // 5 shows attended
+  | 'superfan'        // 10 shows attended
+  | 'legendary'       // 25 shows attended
+  | 'comedy_addict'   // 50 shows attended
+  | 'pioneer'         // Early adopter
+  | 'social_butterfly' // 10 forum posts
+  | 'hype_master'     // 50 event hypes
+  | 'reviewer'        // 10 show reviews
+
+export const BADGE_DEFINITIONS: Record<BadgeType, { name: string; description: string; icon: string; requirement: number }> = {
+  first_show: { name: 'First Laugh', description: 'Attended your first comedy show', icon: '🎭', requirement: 1 },
+  regular: { name: 'Regular', description: 'Attended 5 comedy shows', icon: '⭐', requirement: 5 },
+  superfan: { name: 'Superfan', description: 'Attended 10 comedy shows', icon: '🌟', requirement: 10 },
+  legendary: { name: 'Legendary', description: 'Attended 25 comedy shows', icon: '👑', requirement: 25 },
+  comedy_addict: { name: 'Comedy Addict', description: 'Attended 50 comedy shows', icon: '🎪', requirement: 50 },
+  pioneer: { name: 'Pioneer', description: 'Early NovaActa adopter', icon: '🚀', requirement: 0 },
+  social_butterfly: { name: 'Social Butterfly', description: 'Made 10 forum posts', icon: '🦋', requirement: 10 },
+  hype_master: { name: 'Hype Master', description: 'Hyped 50 upcoming events', icon: '🔥', requirement: 50 },
+  reviewer: { name: 'Critic', description: 'Wrote 10 show reviews', icon: '✍️', requirement: 10 },
+}
+
+export interface Superfan extends User {
+  role: 'superfan'
+  superfan_profile?: SuperfanProfile
+}
+
+export interface ShowAttendance {
+  id: string
+  user_id: string
+  event_id: string
+  event_name: string
+  venue_name: string
+  attended_at: string
+  review?: string
+  rating?: number
+}
+
+export interface EventHype {
+  id: string
+  user_id: string
+  event_id: string
+  event_name: string
+  venue_name: string
+  event_date: string
+  hype_message?: string
+  created_at: string
+}
 
 export interface User {
   id: string

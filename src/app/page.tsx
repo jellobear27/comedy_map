@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MapPin, Mic, BookOpen, Users, Zap, ArrowRight, Star, Calendar, TrendingUp } from 'lucide-react'
+import { MapPin, Mic, BookOpen, Users, Zap, ArrowRight, Star, Calendar, TrendingUp, Heart, Trophy, Ticket, Sparkles } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
@@ -338,6 +338,104 @@ export default function HomePage() {
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Superfan Section */}
+      {FEATURES.community && (
+        <section className="relative py-24 lg:py-32">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00F5D4]/5 to-transparent" />
+          
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+              <div>
+                <Badge variant="success" className="mb-4">
+                  <Heart className="w-3 h-3 mr-1" />
+                  For Comedy Superfans
+                </Badge>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+                  Love Comedy?{' '}
+                  <span className="bg-gradient-to-r from-[#00F5D4] via-[#FFB627] to-[#F72585] bg-clip-text text-transparent">
+                    Join the Fan Club
+                  </span>
+                </h2>
+                <p className="text-lg text-[#A0A0A0] mb-8">
+                  Connect with fellow comedy lovers, hype upcoming shows, share reviews, and earn badges 
+                  for your dedication to standup. The comedy community is stronger with you in it.
+                </p>
+                
+                <ul className="space-y-4 mb-8">
+                  {[
+                    { icon: Sparkles, text: 'Hype upcoming events with other fans', color: 'text-[#FFB627]' },
+                    { icon: Trophy, text: 'Earn badges for shows attended', color: 'text-[#00F5D4]' },
+                    { icon: Ticket, text: 'Premium: Early ticket access & meet-and-greets', color: 'text-[#F72585]' },
+                    { icon: Users, text: 'Connect with fellow comedy enthusiasts', color: 'text-[#7B2FF7]' },
+                  ].map((item) => (
+                    <li key={item.text} className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full bg-white/5 flex items-center justify-center`}>
+                        <item.icon className={`w-3 h-3 ${item.color}`} />
+                      </div>
+                      <span className="text-[#A0A0A0]">{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href="/signup?role=superfan">
+                  <Button className="bg-gradient-to-r from-[#00F5D4] to-[#7B2FF7]">
+                    <Heart className="w-5 h-5 mr-2" />
+                    Join as Superfan
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Superfan Feature Preview */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00F5D4] to-[#FFB627] rounded-3xl blur-xl opacity-20" />
+                <Card variant="glass" hover={false} className="relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-white">🏆 Badge Collection</h3>
+                    <Badge variant="success">12 earned</Badge>
+                  </div>
+                  
+                  {/* Mock badges */}
+                  <div className="grid grid-cols-4 gap-3 mb-6">
+                    {['🎭', '⭐', '🌟', '👑', '🔥', '🦋', '✍️', '🎪'].map((emoji, i) => (
+                      <div 
+                        key={i} 
+                        className={`aspect-square rounded-xl flex items-center justify-center text-2xl ${
+                          i < 5 
+                            ? 'bg-[#FFB627]/10 border border-[#FFB627]/30' 
+                            : 'bg-[#1A0033]/50 border border-[#7B2FF7]/20 opacity-40'
+                        }`}
+                      >
+                        {emoji}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-[#00F5D4]/5 border border-[#00F5D4]/20 mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-white font-medium">Shows Attended</span>
+                      <span className="text-sm text-[#00F5D4] font-bold">23</span>
+                    </div>
+                    <div className="h-2 bg-[#1A0033] rounded-full overflow-hidden">
+                      <div className="h-full w-[46%] bg-gradient-to-r from-[#00F5D4] to-[#7B2FF7] rounded-full" />
+                    </div>
+                    <div className="text-xs text-[#A0A0A0] mt-1">2 more until Legendary badge!</div>
+                  </div>
+
+                  <div className="text-center">
+                    <Link href="/community/superfans">
+                      <Button variant="secondary" size="sm">
+                        Enter Superfan Zone
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
+                </Card>
               </div>
             </div>
           </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, MessageSquare, Heart, Share2, Bookmark, TrendingUp, Clock, Users, Plus, Filter } from 'lucide-react'
+import { Search, MessageSquare, Heart, Share2, Bookmark, TrendingUp, Clock, Users, Plus, Mic, Sparkles } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
@@ -146,6 +146,20 @@ export default function CommunityPage() {
             <p className="text-lg text-[#A0A0A0] max-w-2xl mx-auto">
               Share experiences, get advice, and connect with fellow comedians on your journey.
             </p>
+          </div>
+
+          {/* Forum Tabs */}
+          <div className="flex justify-center gap-4 mb-8">
+            <Button size="sm">
+              <Mic className="w-4 h-4 mr-2" />
+              Comedian Forum
+            </Button>
+            <Link href="/community/superfans">
+              <Button variant="secondary" size="sm">
+                <Heart className="w-4 h-4 mr-2" />
+                Superfan Zone
+              </Button>
+            </Link>
           </div>
 
           {/* Search and Create */}

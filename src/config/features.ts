@@ -12,8 +12,8 @@ export const FEATURES = {
   openMics: true,           // ✅ Ready
   findTalent: false,        // 🚧 In development
   courses: false,           // 🚧 In development
-  community: false,         // 🚧 In development
-  forVenues: false,         // 🚧 In development
+  community: true,          // ✅ Ready - Comedian + Superfan forums
+  forVenues: true,          // ✅ Ready - Venue signup & host connections
   
   // ===== FOOTER RESOURCES =====
   blog: false,              // 🚧 Coming soon

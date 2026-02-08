@@ -11,10 +11,10 @@ import { FEATURES } from '@/config/features'
 // Define all nav links with their feature flag
 const allNavLinks = [
   { href: '/open-mics', label: 'Open Mics', feature: 'openMics' as const },
-  { href: '/for-venues/find-talent', label: 'Find Talent', feature: 'findTalent' as const },
-  { href: '/courses', label: 'Courses', feature: 'courses' as const },
   { href: '/community', label: 'Community', feature: 'community' as const },
   { href: '/for-venues', label: 'For Venues', feature: 'forVenues' as const },
+  { href: '/for-venues/find-talent', label: 'Find Talent', feature: 'findTalent' as const },
+  { href: '/courses', label: 'Courses', feature: 'courses' as const },
 ]
 
 // Filter to only show enabled features
