@@ -1,17 +1,28 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="32" height="32" rx="6" fill="#0f0f0f"/>
-  <g transform="translate(4, 2) scale(1)">
-    <path d="M12 1a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0V5a4 4 0 0 0-4-4Z" stroke="url(#gFav)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    <path d="M19 10v1a7 7 0 0 1-14 0v-1" stroke="url(#gFav)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    <path d="M12 17v4" stroke="url(#gFav)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M8 21h8" stroke="url(#gFav)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
+  
+  <!-- Classic ball mic head -->
+  <circle cx="16" cy="9" r="5" stroke="url(#gFav)" stroke-width="1.5" fill="none"/>
+  
+  <!-- Grille lines -->
+  <path d="M12.5 7.5h7M12 9h8M12.5 10.5h7" stroke="url(#gFav)" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+  
+  <!-- Collar -->
+  <rect x="14" y="13.5" width="4" height="2" rx="0.5" fill="url(#gFav)"/>
+  
+  <!-- Stand pole -->
+  <line x1="16" y1="15.5" x2="16" y2="25" stroke="url(#gFav)" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- Base -->
+  <path d="M11 28L16 25L21 28" stroke="url(#gFav)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="11" cy="28" r="1" fill="url(#gFav)"/>
+  <circle cx="21" cy="28" r="1" fill="url(#gFav)"/>
+  
   <defs>
-    <linearGradient id="gFav" x1="7.5" y1="1" x2="16.5" y2="23" gradientUnits="userSpaceOnUse">
+    <linearGradient id="gFav" x1="8" y1="4" x2="24" y2="28" gradientUnits="userSpaceOnUse">
       <stop stop-color="#7B2FF7"/>
       <stop offset="0.5" stop-color="#F72585"/>
       <stop offset="1" stop-color="#FF6B6B"/>
     </linearGradient>
   </defs>
 </svg>
-
