@@ -107,6 +107,58 @@ export interface RoastReport {
   reviewed_at?: string
 }
 
+// Workshop Group types
+export interface WorkshopGroup {
+  id: string
+  name: string
+  description?: string
+  cover_image_url?: string
+  owner_id: string
+  max_members: number
+  is_private: boolean
+  invite_code?: string
+  member_count: number
+  created_at: string
+  updated_at: string
+  owner?: User
+}
+
+export interface WorkshopMembership {
+  id: string
+  group_id: string
+  user_id: string
+  role: 'owner' | 'admin' | 'member'
+  joined_at: string
+  user?: User
+}
+
+export interface WorkshopPost {
+  id: string
+  group_id: string
+  author_id: string
+  title: string
+  content: string
+  post_type: 'joke' | 'bit' | 'premise' | 'crowdwork' | 'setlist' | 'other'
+  video_url?: string
+  status: 'draft' | 'seeking_feedback' | 'revised' | 'stage_ready'
+  feedback_count: number
+  created_at: string
+  updated_at: string
+  author?: User
+}
+
+export interface WorkshopFeedback {
+  id: string
+  post_id: string
+  author_id: string
+  content: string
+  feedback_type: 'general' | 'punchline' | 'premise' | 'timing' | 'wording' | 'structure'
+  rating?: 'hits' | 'almost' | 'needs_work'
+  is_helpful: boolean
+  created_at: string
+  author?: User
+}
+
 export interface User {
   id: string
   email: string

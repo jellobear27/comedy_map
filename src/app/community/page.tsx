@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, MessageSquare, Heart, Share2, Bookmark, TrendingUp, Clock, Users, Plus, Mic, Sparkles, Flame } from 'lucide-react'
+import { Search, MessageSquare, Heart, Share2, Bookmark, TrendingUp, Clock, Users, Plus, Mic, Sparkles, Flame, Pencil } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
@@ -158,6 +158,12 @@ export default function CommunityPage() {
               <Button variant="secondary" size="sm">
                 <Heart className="w-4 h-4 mr-2" />
                 Superfan Zone
+              </Button>
+            </Link>
+            <Link href="/community/workshop">
+              <Button variant="secondary" size="sm" className="border-[#00F5D4]/50 hover:bg-[#00F5D4]/10">
+                <Pencil className="w-4 h-4 mr-2 text-[#00F5D4]" />
+                Workshop
               </Button>
             </Link>
             <Link href="/community/roast-me">
