@@ -210,6 +210,14 @@ function SignupForm() {
             {error && (
               <div className="p-4 rounded-xl bg-[#FF6B6B]/10 border border-[#FF6B6B]/30 text-[#FF6B6B] text-sm">
                 {error}
+                {error.includes('already exists') && (
+                  <Link 
+                    href="/login" 
+                    className="block mt-2 text-[#7B2FF7] hover:text-[#F72585] font-medium underline"
+                  >
+                    → Sign in instead
+                  </Link>
+                )}
               </div>
             )}
 
