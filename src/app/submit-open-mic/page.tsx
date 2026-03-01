@@ -41,7 +41,6 @@ interface SubmitFormData {
   start_time: string
   end_time: string
   frequency: 'weekly' | 'biweekly' | 'monthly' | 'one-time'
-  signup_type: 'first-come' | 'list' | 'bucket' | 'online'
   time_per_comic: number
   cover_charge: number
   drink_minimum: boolean
@@ -65,7 +64,6 @@ const initialFormData: SubmitFormData = {
   start_time: '20:00',
   end_time: '',
   frequency: 'weekly',
-  signup_type: 'list',
   time_per_comic: 5,
   cover_charge: 0,
   drink_minimum: false,
@@ -105,7 +103,6 @@ export default function SubmitOpenMicPage() {
           start_time: formData.start_time,
           end_time: formData.end_time || null,
           frequency: formData.frequency,
-          signup_type: formData.signup_type,
           time_per_comic: formData.time_per_comic,
           cover_charge: formData.cover_charge,
           drink_minimum: formData.drink_minimum,
@@ -347,33 +344,18 @@ export default function SubmitOpenMicPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#A0A0A0] mb-2">How Often?</label>
-                  <select
-                    value={formData.frequency}
-                    onChange={(e) => setFormData({ ...formData, frequency: e.target.value as SubmitFormData['frequency'] })}
-                    className="w-full px-4 py-3 bg-[#1A0033]/50 border border-[#7B2FF7]/20 rounded-xl text-white focus:outline-none focus:border-[#7B2FF7]"
-                  >
-                    <option value="weekly">Every Week</option>
-                    <option value="biweekly">Every 2 Weeks</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="one-time">One-time Event</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#A0A0A0] mb-2">How to Sign Up?</label>
-                  <select
-                    value={formData.signup_type}
-                    onChange={(e) => setFormData({ ...formData, signup_type: e.target.value as SubmitFormData['signup_type'] })}
-                    className="w-full px-4 py-3 bg-[#1A0033]/50 border border-[#7B2FF7]/20 rounded-xl text-white focus:outline-none focus:border-[#7B2FF7]"
-                  >
-                    <option value="list">Sign-up List (arrive early)</option>
-                    <option value="first-come">First Come First Serve</option>
-                    <option value="bucket">Bucket Draw</option>
-                    <option value="online">Online Signup Only</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-[#A0A0A0] mb-2">How Often?</label>
+                <select
+                  value={formData.frequency}
+                  onChange={(e) => setFormData({ ...formData, frequency: e.target.value as SubmitFormData['frequency'] })}
+                  className="w-full px-4 py-3 bg-[#1A0033]/50 border border-[#7B2FF7]/20 rounded-xl text-white focus:outline-none focus:border-[#7B2FF7]"
+                >
+                  <option value="weekly">Every Week</option>
+                  <option value="biweekly">Every 2 Weeks</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="one-time">One-time Event</option>
+                </select>
               </div>
             </div>
 

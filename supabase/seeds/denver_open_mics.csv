@@ -1,0 +1,23 @@
+name,description,address,city,state,zip_code,day_of_week,start_time,frequency,signup_type,time_per_comic,is_active,cover_charge,notes
+Showcase of the Mondays,Weekly open mic comedy night on Colfax,1920 E Colfax Ave,Denver,CO,80206,1,20:00,weekly,list,5,true,0,One of Denvers most popular open mics
+Lions Lair Open Mic,Legendary dive bar open mic,2022 E Colfax Ave,Denver,CO,80206,1,21:00,weekly,list,5,true,0,Classic Colfax dive bar vibe
+Black Shirt Brewing Open Mic,Brewery open mic in RiNo,3719 Walnut St,Denver,CO,80205,1,19:30,weekly,list,5,true,0,Great craft beer selection
+Longtable Open Mic,Weekly open mic at Longtable,2895 Fairfax St,Denver,CO,80207,1,20:00,weekly,list,5,true,0,
+Comedy Works New Talent Night,The legendary Comedy Works new talent showcase,1226 15th St,Denver,CO,80202,2,20:00,weekly,list,5,true,12,Premier Denver venue
+Scruffy Murphys Open Mic,Irish pub open mic downtown,2030 Larimer St,Denver,CO,80205,2,20:00,weekly,list,5,true,0,Casual pub atmosphere
+Taco Tuesday Comedy Night,Tacos and comedy,931 E 11th Ave,Denver,CO,80218,2,20:00,weekly,list,5,true,0,Taco specials available
+Rise Comedy Open Mic,Open mic at Denvers comedy theater,1260 22nd St,Denver,CO,80205,3,19:30,weekly,list,5,true,0,Professional comedy theater
+Raices Comedia Open Mic,Monthly bilingual open mic,2060 W Colfax Ave,Denver,CO,80204,3,20:00,monthly,list,5,true,0,Last Wednesday - Bilingual welcome
+Mutiny Comedy Open Mic,Open mic at Mutiny Information Cafe,3483 S Broadway,Englewood,CO,80113,3,20:00,weekly,list,5,true,0,Alternative comedy friendly
+Ratio Comedy Show,Comedy at Ratio Beerworks,2920 Larimer St,Denver,CO,80205,3,20:00,weekly,bucket,5,true,0,RiNo location
+Pallet City Open Mic,Weekly open mic at Monkey Barrel Bar,4401 Tejon St,Denver,CO,80211,4,20:00,weekly,list,5,true,0,Sunnyside neighborhood
+LEGENDS Open Mic,Monthly open mic on South Broadway,140 S Broadway,Denver,CO,80209,4,20:00,monthly,list,5,true,5,Third Thursday of the month
+Hai Comedy,Weekly show in Highland,3600 W 32nd Ave,Denver,CO,80211,4,19:30,weekly,list,5,true,15,More of a showcase
+Crazy Mountain Open Mic,Weekly at Crazy Mountain Brewery,1505 N Ogden St,Denver,CO,80218,5,20:00,weekly,bucket,5,true,0,Bucket draw style
+Tag Youre It Open Mic,Sunday open mic at RISE Comedy,1260 22nd St,Denver,CO,80205,0,19:00,weekly,list,5,true,0,Great Sunday option
+Showcase of the Mondays On Sundays,Popular Monday mic Sunday edition,8001 E Colfax Ave,Denver,CO,80220,0,19:00,weekly,list,5,true,0,
+Dulce Vida Open Mic,Bi-monthly at Dulce Vida,1201 Cherokee St,Denver,CO,80204,0,19:00,biweekly,list,5,true,0,First and third Sundays
+The Fort Open Mic,Weekly open mic at The Comedy Fort,167 N College Ave,Fort Collins,CO,80524,1,20:00,weekly,list,5,true,0,Fort Collins main comedy venue
+Pick Your Poison,Weekly Tuesday open mic in Fort Collins,152 W Mountain Ave,Fort Collins,CO,80524,2,20:00,weekly,list,5,true,0,Downtown Fort Collins
+Slyce Open Mic,Weekly Wednesday open mic in Fort Collins,163 W Mountain Ave,Fort Collins,CO,80524,3,20:00,weekly,list,5,true,0,Pizza and comedy combo
+

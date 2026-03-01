@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
-import { Search, MapPin, Calendar, Clock, Filter, ChevronDown, Star, Users, Plus, Mic, Theater, X } from 'lucide-react'
+import { Search, MapPin, Calendar, Clock, Filter, ChevronDown, Plus, Mic, Theater, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -46,7 +46,6 @@ interface OpenMicData {
   day_of_week: number
   week_of_month?: number // 0 = every week, 1-5 = specific week
   start_time: string
-  signup_type: string
   event_type?: 'open-mic' | 'show'
   time_per_comic?: number
   cover_charge?: number
@@ -56,17 +55,12 @@ interface OpenMicData {
   is_active?: boolean
 }
 
-const signupTypeLabels: Record<string, string> = {
-  'first-come': 'First Come',
-  'list': 'Sign-up List',
-  'bucket': 'Bucket Draw',
-  'online': 'Online Signup',
-}
 
 export default function OpenMicsPage() {
   const [openMics, setOpenMics] = useState<OpenMicData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const resultsRef = useRef<HTMLDivElement>(null)
   const [selectedState, setSelectedState] = useState('')
   const [selectedCity, setSelectedCity] = useState('')
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
@@ -112,10 +106,24 @@ export default function OpenMicsPage() {
     return citiesFromData
   }, [selectedState, openMics])
 
-  // Reset city when state changes
+  // Reset city when state changes and scroll to results
   useEffect(() => {
     setSelectedCity('')
+    if (selectedState) {
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+    }
   }, [selectedState])
+
+  // Scroll to results when filters change
+  useEffect(() => {
+    if (selectedCity || selectedDay !== null || selectedWeek !== null || selectedEventType) {
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+    }
+  }, [selectedCity, selectedDay, selectedWeek, selectedEventType])
 
   // Filter open mics
   const filteredMics = useMemo(() => {
@@ -146,8 +154,11 @@ export default function OpenMicsPage() {
           if (mic.week_of_month !== selectedWeek && mic.week_of_month !== 0) return false
         }
       }
-      // Event type filter
-      if (selectedEventType && mic.event_type !== selectedEventType) return false
+      // Event type filter (treat null/undefined as 'open-mic')
+      if (selectedEventType) {
+        const micType = mic.event_type || 'open-mic'
+        if (micType !== selectedEventType) return false
+      }
       
     return true
   })
@@ -201,6 +212,11 @@ export default function OpenMicsPage() {
                   placeholder="Search by city, venue, or mic name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery.length > 0) {
+                      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
                   icon={<Search className="w-5 h-5" />}
                 />
               </div>
@@ -395,7 +411,7 @@ export default function OpenMicsPage() {
       </section>
 
       {/* Results Section */}
-      <section className="py-12">
+      <section className="py-12" ref={resultsRef}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <p className="text-[#A0A0A0]">
@@ -431,18 +447,13 @@ export default function OpenMicsPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMics.map((mic) => (
                 <Card key={mic.id} variant="gradient" className="group cursor-pointer hover:border-[#7B2FF7]/50 transition-all">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-white group-hover:text-[#7B2FF7] transition-colors">
-                      {mic.name}
-                    </h3>
-                      {mic.venue_name && (
+                <div className="mb-4">
+                  <h3 className="font-semibold text-white group-hover:text-[#7B2FF7] transition-colors">
+                    {mic.name}
+                  </h3>
+                  {mic.venue_name && (
                     <p className="text-sm text-[#A0A0A0]">{mic.venue_name}</p>
-                      )}
-                  </div>
-                  <Badge variant="success" size="sm">
-                      {signupTypeLabels[mic.signup_type] || mic.signup_type}
-                  </Badge>
+                  )}
                 </div>
 
                 <div className="space-y-3 mb-4">
@@ -473,19 +484,10 @@ export default function OpenMicsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-[#7B2FF7]/20">
-                    {mic.rating ? (
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-[#FFB627] fill-current" />
-                    <span className="text-sm font-medium text-white">{mic.rating}</span>
-                    <span className="text-sm text-[#A0A0A0]">({mic.reviews_count})</span>
-                  </div>
-                    ) : (
-                      <span className="text-sm text-[#A0A0A0]">No reviews yet</span>
-                    )}
+                <div className="flex items-center justify-end pt-4 border-t border-[#7B2FF7]/20">
                   <div className="flex items-center gap-2 text-sm">
-                    <Users className="w-4 h-4 text-[#A0A0A0]" />
-                      <span className="text-[#A0A0A0]">{mic.time_per_comic || 5} min</span>
+                    <Clock className="w-4 h-4 text-[#A0A0A0]" />
+                    <span className="text-[#A0A0A0]">{mic.time_per_comic || 5} min set</span>
                   </div>
                 </div>
 

@@ -276,7 +276,6 @@ export interface OpenMic {
   start_time: string // HH:MM format
   end_time?: string
   frequency: 'weekly' | 'biweekly' | 'monthly' | 'one-time'
-  signup_type: 'first-come' | 'list' | 'bucket' | 'online'
   time_per_comic?: number // minutes
   is_active: boolean
   cover_charge?: number
