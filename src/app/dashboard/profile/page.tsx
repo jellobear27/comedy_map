@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { 
   User, Camera, MapPin, Calendar, Globe, Instagram, Youtube, 
@@ -152,7 +153,10 @@ export default function ProfileEditPage() {
           updated_at: new Date().toISOString(),
         })
 
-      if (profileError) throw profileError
+      if (profileError) {
+        console.error('Profile update error:', profileError.message, profileError.code, profileError.details)
+        throw new Error(`Profile: ${profileError.message}`)
+      }
 
       // Update comedian profile
       const { error: comedianError } = await supabase
@@ -171,9 +175,17 @@ export default function ProfileEditPage() {
           performance_types: formData.performance_types,
         })
 
-      if (comedianError) throw comedianError
+      if (comedianError) {
+        console.error('Comedian profile error:', comedianError.message, comedianError.code, comedianError.details)
+        throw new Error(`Comedian profile: ${comedianError.message}`)
+      }
 
-      setMessage({ type: 'success', text: 'Profile saved successfully!' })
+      // Redirect to public profile after saving
+      if (formData.username) {
+        router.push(`/comedians/${formData.username}`)
+      } else {
+        setMessage({ type: 'success', text: 'Profile saved! Set a username to view your public profile.' })
+      }
     } catch (error) {
       console.error('Error saving profile:', error)
       setMessage({ type: 'error', text: 'Failed to save profile. Please try again.' })
@@ -304,11 +316,25 @@ export default function ProfileEditPage() {
     <div className="min-h-screen bg-[#050505] py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Edit Your Profile</h1>
-          <p className="text-[#A0A0A0]">
-            Build your comedian profile to get discovered by venues and connect with the community.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Edit Your Profile</h1>
+            <p className="text-[#A0A0A0]">
+              Build your comedian profile to get discovered by venues and connect with the community.
+            </p>
+          </div>
+          {formData.username ? (
+            <Link href={`/comedians/${formData.username}`}>
+              <Button variant="secondary" className="flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                View Public Profile
+              </Button>
+            </Link>
+          ) : (
+            <div className="text-sm text-[#A0A0A0] bg-[#1A0033]/40 px-4 py-2 rounded-xl border border-[#7B2FF7]/20">
+              💡 Set a username below to get your public profile link
+            </div>
+          )}
         </div>
 
         {/* Message */}
