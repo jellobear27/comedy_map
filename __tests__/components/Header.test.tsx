@@ -13,25 +13,26 @@ describe('Header Component', () => {
     expect(screen.getByText('NovaActa')).toBeInTheDocument()
   })
 
-  it('renders all navigation links', () => {
+  it('renders enabled navigation links', () => {
     render(<Header />)
     
+    // These are enabled in the feature flags
     expect(screen.getByText('Open Mics')).toBeInTheDocument()
-    expect(screen.getByText('Courses')).toBeInTheDocument()
     expect(screen.getByText('Community')).toBeInTheDocument()
     expect(screen.getByText('For Venues')).toBeInTheDocument()
+    
+    // Courses is disabled, should not be present
+    expect(screen.queryByText('Courses')).not.toBeInTheDocument()
   })
 
   it('navigation links have correct href attributes', () => {
     render(<Header />)
     
     const openMicsLink = screen.getByRole('link', { name: 'Open Mics' })
-    const coursesLink = screen.getByRole('link', { name: 'Courses' })
     const communityLink = screen.getByRole('link', { name: 'Community' })
     const forVenuesLink = screen.getByRole('link', { name: 'For Venues' })
     
     expect(openMicsLink).toHaveAttribute('href', '/open-mics')
-    expect(coursesLink).toHaveAttribute('href', '/courses')
     expect(communityLink).toHaveAttribute('href', '/community')
     expect(forVenuesLink).toHaveAttribute('href', '/for-venues')
   })

@@ -142,11 +142,17 @@ export default function Header({ user }: HeaderProps) {
               </div>
             ) : (
               <>
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">Sign In</Button>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center font-semibold transition-all duration-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#050505] bg-transparent text-[#A0A0A0] hover:text-white hover:bg-white/5 focus:ring-white/20 text-sm px-4 py-2"
+                >
+                  Sign In
                 </Link>
-                <Link href="/signup">
-                  <Button size="sm">Get Started</Button>
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center font-semibold transition-all duration-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#050505] bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B] text-white hover:shadow-[0_10px_40px_rgba(123,47,247,0.4)] hover:-translate-y-0.5 focus:ring-[#7B2FF7] text-sm px-4 py-2"
+                >
+                  Get Started
                 </Link>
               </>
             )}
@@ -191,11 +197,17 @@ export default function Header({ user }: HeaderProps) {
                 </>
               ) : (
                 <>
-                  <Link href="/login">
-                    <Button variant="secondary" className="w-full">Sign In</Button>
+                  <Link
+                    href="/login"
+                    className="w-full inline-flex items-center justify-center font-semibold transition-all duration-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#050505] bg-transparent border-2 border-[#7B2FF7]/50 text-white hover:border-[#7B2FF7] hover:bg-[#7B2FF7]/10 focus:ring-[#7B2FF7] text-base px-6 py-3"
+                  >
+                    Sign In
                   </Link>
-                  <Link href="/signup">
-                    <Button className="w-full">Get Started</Button>
+                  <Link
+                    href="/signup"
+                    className="w-full inline-flex items-center justify-center font-semibold transition-all duration-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#050505] bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B] text-white hover:shadow-[0_10px_40px_rgba(123,47,247,0.4)] hover:-translate-y-0.5 focus:ring-[#7B2FF7] text-base px-6 py-3"
+                  >
+                    Get Started
                   </Link>
                 </>
               )}

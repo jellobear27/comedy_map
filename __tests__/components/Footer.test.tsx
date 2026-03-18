@@ -12,48 +12,53 @@ describe('Footer Component', () => {
     expect(screen.getByText('Built for comics. Backed by community.')).toBeInTheDocument()
   })
 
-  it('renders platform links', () => {
+  it('renders enabled platform links', () => {
     render(<Footer />)
     
+    // These are enabled in the feature flags
     expect(screen.getByText('Find Open Mics')).toBeInTheDocument()
-    expect(screen.getByText('Courses')).toBeInTheDocument()
     expect(screen.getByText('Community')).toBeInTheDocument()
     expect(screen.getByText('For Venues')).toBeInTheDocument()
+    
+    // Courses is disabled, should not be present
+    expect(screen.queryByText('Courses')).not.toBeInTheDocument()
   })
 
   it('platform links have correct href', () => {
     render(<Footer />)
     
     expect(screen.getByRole('link', { name: 'Find Open Mics' })).toHaveAttribute('href', '/open-mics')
-    expect(screen.getByRole('link', { name: 'Courses' })).toHaveAttribute('href', '/courses')
     expect(screen.getByRole('link', { name: 'Community' })).toHaveAttribute('href', '/community')
     expect(screen.getByRole('link', { name: 'For Venues' })).toHaveAttribute('href', '/for-venues')
   })
 
-  it('renders resource links', () => {
+  it('does not render disabled resource links', () => {
     render(<Footer />)
     
-    expect(screen.getByText('Blog')).toBeInTheDocument()
-    expect(screen.getByText('Comedy Guides')).toBeInTheDocument()
-    expect(screen.getByText('Podcast')).toBeInTheDocument()
-    expect(screen.getByText('Live Events')).toBeInTheDocument()
+    // All resource links are disabled in feature flags
+    expect(screen.queryByText('Blog')).not.toBeInTheDocument()
+    expect(screen.queryByText('Comedy Guides')).not.toBeInTheDocument()
+    expect(screen.queryByText('Podcast')).not.toBeInTheDocument()
+    expect(screen.queryByText('Live Events')).not.toBeInTheDocument()
   })
 
-  it('renders company links', () => {
+  it('does not render disabled company links', () => {
     render(<Footer />)
     
-    expect(screen.getByText('About Us')).toBeInTheDocument()
-    expect(screen.getByText('Careers')).toBeInTheDocument()
-    expect(screen.getByText('Contact')).toBeInTheDocument()
-    expect(screen.getByText('Press')).toBeInTheDocument()
+    // All company links are disabled in feature flags
+    expect(screen.queryByText('About Us')).not.toBeInTheDocument()
+    expect(screen.queryByText('Careers')).not.toBeInTheDocument()
+    expect(screen.queryByText('Contact')).not.toBeInTheDocument()
+    expect(screen.queryByText('Press')).not.toBeInTheDocument()
   })
 
-  it('renders legal links', () => {
+  it('does not render disabled legal links', () => {
     render(<Footer />)
     
-    expect(screen.getByText('Privacy Policy')).toBeInTheDocument()
-    expect(screen.getByText('Terms of Service')).toBeInTheDocument()
-    expect(screen.getByText('Cookie Policy')).toBeInTheDocument()
+    // All legal links are disabled in feature flags
+    expect(screen.queryByText('Privacy Policy')).not.toBeInTheDocument()
+    expect(screen.queryByText('Terms of Service')).not.toBeInTheDocument()
+    expect(screen.queryByText('Cookie Policy')).not.toBeInTheDocument()
   })
 
   it('renders copyright with current year', () => {
