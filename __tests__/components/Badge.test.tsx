@@ -17,8 +17,8 @@ describe('Badge Component', () => {
     rerender(<Badge variant="warning">Warning</Badge>)
     expect(screen.getByText('Warning')).toBeInTheDocument()
     
-    rerender(<Badge variant="error">Error</Badge>)
-    expect(screen.getByText('Error')).toBeInTheDocument()
+    rerender(<Badge variant="danger">Danger</Badge>)
+    expect(screen.getByText('Danger')).toBeInTheDocument()
   })
 
   it('renders different sizes', () => {
