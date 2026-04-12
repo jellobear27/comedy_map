@@ -5,11 +5,22 @@ function isValidSupabaseUrl(url: string | undefined): boolean {
   if (!url) return false
   if (!url.startsWith('http://') && !url.startsWith('https://')) return false
   if (url.includes('your_supabase') || url.includes('your-project')) return false
+  try {
+    new URL(url)
+  } catch {
+    return false
+  }
   return true
 }
 
+/** Strip trailing slashes so the JS client builds correct /auth/v1 paths. */
+function normalizeSupabaseUrl(url: string): string {
+  return url.replace(/\/+$/, '')
+}
+
 export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseUrl = rawUrl && isValidSupabaseUrl(rawUrl) ? normalizeSupabaseUrl(rawUrl) : rawUrl
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!isValidSupabaseUrl(supabaseUrl) || !supabaseAnonKey || supabaseAnonKey.includes('your_')) {
@@ -52,5 +63,9 @@ export function createClient() {
   }
 
   // At this point, we know both values are valid strings
-  return createBrowserClient(supabaseUrl!, supabaseAnonKey!)
+  return createBrowserClient(supabaseUrl!, supabaseAnonKey!, {
+    auth: {
+      flowType: 'pkce',
+    },
+  })
 }

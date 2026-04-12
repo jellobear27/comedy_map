@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Logo from '@/components/ui/Logo'
 import { createClient } from '@/lib/supabase/client'
+import { getAuthErrorMessage } from '@/lib/auth-errors'
 
 function LoginForm() {
   const router = useRouter()
@@ -48,7 +49,7 @@ function LoginForm() {
 
       if (error) throw error
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(getAuthErrorMessage(err))
       setIsOAuthLoading(false)
     }
   }
@@ -68,7 +69,7 @@ function LoginForm() {
       if (error) throw error
       router.push('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(getAuthErrorMessage(err))
     } finally {
       setIsLoading(false)
     }

@@ -32,7 +32,8 @@ interface ProfileFormData {
   // Comedian profile
   username: string
   headline: string
-  comedy_start_date: string
+  /** Calendar year they started comedy (stored in DB as YYYY-01-01) */
+  comedy_start_year: string
   comedy_styles: string[]
   social_links: SocialLinks
   video_clips: VideoClip[]
@@ -51,7 +52,7 @@ const initialFormData: ProfileFormData = {
   is_public: true,
   username: '',
   headline: '',
-  comedy_start_date: '',
+  comedy_start_year: '',
   comedy_styles: [],
   social_links: {},
   video_clips: [],
@@ -100,6 +101,7 @@ export default function ProfileEditPage() {
 
       if (profile) {
         setFormData({
+          ...initialFormData,
           full_name: profile.full_name || '',
           bio: profile.bio || '',
           city: profile.city || '',
@@ -108,7 +110,12 @@ export default function ProfileEditPage() {
           is_public: profile.is_public ?? true,
           username: comedianProfile?.username || '',
           headline: comedianProfile?.headline || '',
-          comedy_start_date: comedianProfile?.comedy_start_date || '',
+          comedy_start_year: (() => {
+            const raw = comedianProfile?.comedy_start_date
+            if (!raw) return ''
+            const y = new Date(raw as string).getFullYear()
+            return Number.isNaN(y) ? '' : String(y)
+          })(),
           comedy_styles: comedianProfile?.comedy_styles || [],
           social_links: comedianProfile?.social_links || {},
           video_clips: comedianProfile?.video_clips || [],
@@ -138,46 +145,69 @@ export default function ProfileEditPage() {
         return
       }
 
+      const currentYear = new Date().getFullYear()
+      let comedyStartDate: string | null = null
+      const yearRaw = String(formData.comedy_start_year ?? '').trim()
+      const digitsOnly = yearRaw.replace(/\D/g, '')
+      if (digitsOnly.length > 0) {
+        const y = parseInt(digitsOnly.slice(0, 4), 10)
+        if (Number.isNaN(y) || y < 1970 || y > currentYear) {
+          setMessage({
+            type: 'error',
+            text: `Enter a valid year between 1970 and ${currentYear} (e.g. 2018), or clear the field.`,
+          })
+          setIsSaving(false)
+          return
+        }
+        comedyStartDate = `${y}-01-01`
+      }
+
       // Update base profile
       const { error: profileError } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          email: user.email,
-          full_name: formData.full_name,
-          bio: formData.bio,
-          city: formData.city,
-          state: formData.state,
-          profile_photo_url: formData.profile_photo_url,
-          is_public: formData.is_public,
-          updated_at: new Date().toISOString(),
-        })
+        .upsert(
+          {
+            id: user.id,
+            email: user.email,
+            full_name: formData.full_name,
+            bio: formData.bio,
+            city: formData.city,
+            state: formData.state,
+            profile_photo_url: formData.profile_photo_url,
+            is_public: formData.is_public,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        )
 
       if (profileError) {
         console.error('Profile update error:', profileError.message, profileError.code, profileError.details)
-        throw new Error(`Profile: ${profileError.message}`)
+        throw new Error(profileError.message)
       }
 
-      // Update comedian profile
+      // Update comedian profile (explicit conflict target helps inserts vs updates)
       const { error: comedianError } = await supabase
         .from('comedian_profiles')
-        .upsert({
-          id: user.id,
-          username: formData.username || null,
-          headline: formData.headline,
-          comedy_start_date: formData.comedy_start_date || null,
-          comedy_styles: formData.comedy_styles,
-          social_links: formData.social_links,
-          video_clips: formData.video_clips,
-          available_for_booking: formData.available_for_booking,
-          booking_rate: formData.booking_rate,
-          travel_radius: formData.travel_radius,
-          performance_types: formData.performance_types,
-        })
+        .upsert(
+          {
+            id: user.id,
+            username: formData.username || null,
+            headline: formData.headline,
+            comedy_start_date: comedyStartDate,
+            comedy_styles: formData.comedy_styles,
+            social_links: formData.social_links,
+            video_clips: formData.video_clips,
+            available_for_booking: formData.available_for_booking,
+            booking_rate: formData.booking_rate,
+            travel_radius: formData.travel_radius,
+            performance_types: formData.performance_types,
+          },
+          { onConflict: 'id' }
+        )
 
       if (comedianError) {
         console.error('Comedian profile error:', comedianError.message, comedianError.code, comedianError.details)
-        throw new Error(`Comedian profile: ${comedianError.message}`)
+        throw new Error(comedianError.message)
       }
 
       // Redirect to public profile after saving
@@ -188,7 +218,8 @@ export default function ProfileEditPage() {
       }
     } catch (error) {
       console.error('Error saving profile:', error)
-      setMessage({ type: 'error', text: 'Failed to save profile. Please try again.' })
+      const detail = error instanceof Error ? error.message : 'Failed to save profile. Please try again.'
+      setMessage({ type: 'error', text: detail })
     } finally {
       setIsSaving(false)
     }
@@ -237,11 +268,15 @@ export default function ProfileEditPage() {
   }
 
   const calculateYearsOfExperience = () => {
-    if (!formData.comedy_start_date) return null
-    const start = new Date(formData.comedy_start_date)
+    const digits = String(formData.comedy_start_year ?? '')
+      .replace(/\D/g, '')
+      .slice(0, 4)
+    if (digits.length < 4) return null
+    const start = new Date(`${digits}-01-01`)
+    if (Number.isNaN(start.getTime())) return null
     const now = new Date()
     const years = Math.floor((now.getTime() - start.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-    return years
+    return Math.max(0, years)
   }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -361,7 +396,7 @@ export default function ProfileEditPage() {
               <Input
                 id="full_name"
                 label="Full Name / Stage Name"
-                value={formData.full_name}
+                value={formData.full_name ?? ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
                 placeholder="Your name or stage name"
               />
@@ -369,7 +404,7 @@ export default function ProfileEditPage() {
               <Input
                 id="username"
                 label="Username"
-                value={formData.username}
+                value={formData.username ?? ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') }))}
                 placeholder="yourname"
                 icon={<User className="w-4 h-4" />}
@@ -383,7 +418,7 @@ export default function ProfileEditPage() {
               <Input
                 id="headline"
                 label="Headline"
-                value={formData.headline}
+                value={formData.headline ?? ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, headline: e.target.value }))}
                 placeholder="e.g., Denver-based observational comic"
               />
@@ -447,7 +482,7 @@ export default function ProfileEditPage() {
                   
                   <input
                     type="url"
-                    value={formData.profile_photo_url}
+                    value={formData.profile_photo_url ?? ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, profile_photo_url: e.target.value }))}
                     placeholder="Paste image URL"
                     className="w-full px-4 py-2 bg-[#1A1A1A] border border-[#333] rounded-xl text-white placeholder-[#666] text-sm focus:outline-none focus:border-[#7B2FF7] transition-colors"
@@ -460,7 +495,7 @@ export default function ProfileEditPage() {
             <div className="mt-6">
               <label className="block text-sm font-medium text-[#E0E0E0] mb-2">Bio</label>
               <textarea
-                value={formData.bio}
+                value={formData.bio ?? ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                 placeholder="Tell venues and fellow comedians about yourself, your comedy journey, and what makes you unique..."
                 rows={4}
@@ -480,7 +515,7 @@ export default function ProfileEditPage() {
               <Input
                 id="city"
                 label="City"
-                value={formData.city}
+                value={formData.city ?? ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
                 placeholder="Denver"
               />
@@ -488,7 +523,7 @@ export default function ProfileEditPage() {
               <div>
                 <label className="block text-sm font-medium text-[#E0E0E0] mb-2">State</label>
                 <select
-                  value={formData.state}
+                  value={formData.state ?? ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
                   className="w-full px-4 py-3 bg-[#1A1A1A] border border-[#333] rounded-xl text-white focus:outline-none focus:border-[#7B2FF7] focus:ring-1 focus:ring-[#7B2FF7] transition-colors"
                 >
@@ -511,21 +546,33 @@ export default function ProfileEditPage() {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-[#E0E0E0] mb-2">
-                  When did you start doing comedy?
+                  What year did you start doing comedy?
                 </label>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                   <input
-                    type="date"
-                    value={formData.comedy_start_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, comedy_start_date: e.target.value }))}
-                    className="px-4 py-3 bg-[#1A1A1A] border border-[#333] rounded-xl text-white focus:outline-none focus:border-[#7B2FF7] focus:ring-1 focus:ring-[#7B2FF7] transition-colors"
+                    type="number"
+                    inputMode="numeric"
+                    min={1970}
+                    max={new Date().getFullYear()}
+                    step={1}
+                    placeholder="e.g. 2018"
+                    value={formData.comedy_start_year ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, '').slice(0, 4)
+                      setFormData((prev) => ({ ...prev, comedy_start_year: v }))
+                    }}
+                    className="w-36 px-4 py-3 bg-[#1A1A1A] border border-[#333] rounded-xl text-white focus:outline-none focus:border-[#7B2FF7] focus:ring-1 focus:ring-[#7B2FF7] transition-colors"
                   />
                   {calculateYearsOfExperience() !== null && (
-                    <span className="text-[#A0A0A0]">
-                      ({calculateYearsOfExperience()} {calculateYearsOfExperience() === 1 ? 'year' : 'years'} of experience)
+                    <span className="text-[#A0A0A0] text-sm">
+                      (~{calculateYearsOfExperience()}{' '}
+                      {calculateYearsOfExperience() === 1 ? 'year' : 'years'} of experience)
                     </span>
                   )}
                 </div>
+                <p className="text-xs text-[#666] mt-2">
+                  We only need the year—exact dates are easy to forget.
+                </p>
               </div>
 
               <div>
@@ -710,7 +757,7 @@ export default function ProfileEditPage() {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={formData.available_for_booking}
+                    checked={!!formData.available_for_booking}
                     onChange={(e) => setFormData(prev => ({ ...prev, available_for_booking: e.target.checked }))}
                     className="sr-only peer"
                   />
@@ -724,7 +771,7 @@ export default function ProfileEditPage() {
                   <Input
                     id="booking_rate"
                     label="Rate / Pricing Info"
-                    value={formData.booking_rate}
+                    value={formData.booking_rate ?? ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, booking_rate: e.target.value }))}
                     placeholder="Contact for rates, $500-1000, etc."
                   />
@@ -732,7 +779,7 @@ export default function ProfileEditPage() {
                   <div>
                     <label className="block text-sm font-medium text-[#E0E0E0] mb-2">Travel Radius</label>
                     <select
-                      value={formData.travel_radius}
+                      value={formData.travel_radius ?? ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, travel_radius: e.target.value }))}
                       className="w-full px-4 py-3 bg-[#1A1A1A] border border-[#333] rounded-xl text-white focus:outline-none focus:border-[#7B2FF7]"
                     >
@@ -781,7 +828,7 @@ export default function ProfileEditPage() {
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={formData.is_public}
+                  checked={formData.is_public !== false}
                   onChange={(e) => setFormData(prev => ({ ...prev, is_public: e.target.checked }))}
                   className="sr-only peer"
                 />
@@ -792,10 +839,10 @@ export default function ProfileEditPage() {
 
           {/* Save Button */}
           <div className="flex justify-end gap-4">
-            <Button variant="ghost" onClick={() => router.back()}>
+            <Button type="button" variant="ghost" onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button onClick={handleSave} isLoading={isSaving}>
+            <Button type="button" onClick={handleSave} isLoading={isSaving}>
               {isSaving ? 'Saving...' : 'Save Profile'}
             </Button>
           </div>

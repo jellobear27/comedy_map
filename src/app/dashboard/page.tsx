@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { 
-  MapPin, BookOpen, MessageSquare, Calendar, 
-  Users, Heart, ArrowRight, Plus, User,
-  Mic, Trophy, Target, Zap, Edit, Loader2
+  MapPin, BookOpen, MessageSquare,
+  Users, ArrowRight, Plus, User,
+  Mic, Edit, Loader2
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
-import Badge from '@/components/ui/Badge'
 import { createClient } from '@/lib/supabase/client'
+import ComedianPokemonCard from '@/components/comedian/ComedianPokemonCard'
 
 interface UserProfile {
   id: string
@@ -29,8 +29,13 @@ interface ComedianProfile {
   username: string | null
   headline: string | null
   comedy_styles: string[]
+  comedy_start_date?: string | null
   available_for_booking: boolean
-  video_clips: { title: string; url: string }[]
+  booking_rate?: string | null
+  travel_radius?: string | null
+  performance_types?: string[]
+  video_clips: { title: string; url: string; platform?: string }[]
+  social_links?: Record<string, string>
 }
 
 export default function DashboardPage() {
@@ -131,34 +136,55 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-8 relative">
+      {comedianProfile && (
+        <div className="fixed inset-0 pointer-events-none -z-10">
+          <div className="absolute top-1/4 left-1/4 w-[480px] h-[480px] bg-[#7B2FF7]/10 rounded-full blur-[120px] animate-pulse" />
+          <div
+            className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#F72585]/10 rounded-full blur-[120px] animate-pulse"
+            style={{ animationDelay: '1s' }}
+          />
+        </div>
+      )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-0">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            {profile?.profile_photo_url || profile?.avatar_url ? (
-              <img 
-                src={profile.profile_photo_url || profile.avatar_url || ''} 
-                alt={profile.full_name || 'Profile'}
-                className="w-16 h-16 rounded-2xl object-cover"
-              />
-            ) : (
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7B2FF7] to-[#F72585] flex items-center justify-center text-white text-2xl font-bold">
-                {getInitials()}
-            </div>
+            {!comedianProfile && (
+              <>
+                {profile?.profile_photo_url || profile?.avatar_url ? (
+                  <img
+                    src={profile.profile_photo_url || profile.avatar_url || ''}
+                    alt={profile.full_name || 'Profile'}
+                    className="w-16 h-16 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7B2FF7] to-[#F72585] flex items-center justify-center text-white text-2xl font-bold">
+                    {getInitials()}
+                  </div>
+                )}
+              </>
             )}
             <div>
               <h1 className="text-2xl font-bold text-white">
-                Welcome{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
+                {comedianProfile
+                  ? 'Dashboard'
+                  : `Welcome${profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋`}
               </h1>
-              <p className="text-[#A0A0A0]">
-                {getLocation() && (
+              <p className="text-[#A0A0A0] text-sm sm:text-base">
+                {comedianProfile ? (
+                  <>Member since {formatMemberSince()}</>
+                ) : (
                   <>
-                <MapPin className="w-4 h-4 inline mr-1" />
-                    {getLocation()} · 
+                    {getLocation() && (
+                      <>
+                        <MapPin className="w-4 h-4 inline mr-1" />
+                        {getLocation()} ·{' '}
+                      </>
+                    )}
+                    Member since {formatMemberSince()}
                   </>
                 )}
-                Member since {formatMemberSince()}
               </p>
             </div>
           </div>
@@ -196,6 +222,35 @@ export default function DashboardPage() {
               </Link>
             </div>
           </Card>
+        )}
+
+        {comedianProfile && profile && (
+          <section className="mb-10 max-w-5xl mx-auto">
+            <ComedianPokemonCard
+              mode="dashboard"
+              profile={{
+                full_name: profile.full_name,
+                bio: profile.bio,
+                city: profile.city,
+                state: profile.state,
+                profile_photo_url: profile.profile_photo_url,
+                avatar_url: profile.avatar_url,
+                email: profile.email,
+              }}
+              comedian={{
+                username: comedianProfile.username,
+                headline: comedianProfile.headline,
+                comedy_styles: comedianProfile.comedy_styles ?? [],
+                comedy_start_date: comedianProfile.comedy_start_date,
+                available_for_booking: comedianProfile.available_for_booking,
+                booking_rate: comedianProfile.booking_rate,
+                travel_radius: comedianProfile.travel_radius,
+                performance_types: comedianProfile.performance_types ?? [],
+                video_clips: comedianProfile.video_clips ?? [],
+                social_links: comedianProfile.social_links,
+              }}
+            />
+          </section>
         )}
 
         {/* Quick Stats */}
@@ -249,62 +304,6 @@ export default function DashboardPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Profile Summary */}
-            <Card variant="gradient" hover={false}>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-white">Your Profile</h2>
-                <Link href="/dashboard/profile" className="text-sm text-[#7B2FF7] hover:text-[#F72585]">
-                  Edit
-                </Link>
-              </div>
-
-              <div className="space-y-4">
-                {comedianProfile?.headline && (
-                  <p className="text-lg text-[#A0A0A0] italic">"{comedianProfile.headline}"</p>
-                )}
-                
-                {profile?.bio ? (
-                  <p className="text-[#A0A0A0]">{profile.bio}</p>
-                ) : (
-                  <p className="text-[#666] italic">No bio yet. Tell venues about yourself!</p>
-                )}
-
-                {comedianProfile?.comedy_styles && comedianProfile.comedy_styles.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {comedianProfile.comedy_styles.map(style => (
-                      <Badge key={style} variant="default" size="sm">{style}</Badge>
-                    ))}
-                      </div>
-                )}
-
-                {comedianProfile?.available_for_booking && (
-                  <div className="flex items-center gap-2 pt-2">
-                    <Badge variant="success">Available for Booking</Badge>
-                      </div>
-                )}
-
-                {comedianProfile?.username && (
-                  <div className="pt-4 border-t border-[#1A1A1A]">
-                    <p className="text-sm text-[#A0A0A0]">
-                      Your public profile: 
-                      <Link href={`/comedians/${comedianProfile.username}`} className="text-[#7B2FF7] hover:text-[#F72585] ml-2">
-                        novaacta.com/comedians/{comedianProfile.username}
-                      </Link>
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {!isProfileComplete() && (
-                <Link href="/dashboard/profile">
-                  <Button variant="secondary" className="w-full mt-6">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Complete Your Profile
-                </Button>
-              </Link>
-              )}
-            </Card>
-
             {/* Get Started */}
             <Card variant="gradient" hover={false}>
               <h2 className="text-lg font-semibold text-white mb-6">Get Started</h2>
