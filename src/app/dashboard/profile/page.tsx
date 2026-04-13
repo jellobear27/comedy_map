@@ -10,7 +10,15 @@ import {
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
+import SuperfanProfileFields from '@/components/superfan/SuperfanProfileFields'
+import VenueProfileFields from '@/components/venue/VenueProfileFields'
 import { createClient } from '@/lib/supabase/client'
+import {
+  getAuthRoleHintFromClient,
+  resolveAccountRoleWithHints,
+  shouldPersistResolvedRole,
+  type AccountRole,
+} from '@/lib/account-role'
 import { 
   COMEDY_STYLES, 
   PERFORMANCE_TYPES, 
@@ -19,6 +27,13 @@ import {
   VideoClip,
   SocialLinks
 } from '@/types'
+
+function parseFavoriteLocalNames(text: string): string[] {
+  return text
+    .split(/[\n,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
 
 interface ProfileFormData {
   // Base profile
@@ -41,6 +56,17 @@ interface ProfileFormData {
   booking_rate: string
   travel_radius: string
   performance_types: string[]
+
+  // Superfan profile
+  superfan_public_slug: string
+  superfan_preferred_styles: string[]
+  superfan_show_frequency: string
+  superfan_favorite_local_text: string
+
+  // Venue profile
+  venue_name: string
+  venue_contact_phone: string
+  venue_website: string
 }
 
 const initialFormData: ProfileFormData = {
@@ -60,6 +86,13 @@ const initialFormData: ProfileFormData = {
   booking_rate: '',
   travel_radius: '',
   performance_types: [],
+  superfan_public_slug: '',
+  superfan_preferred_styles: [],
+  superfan_show_frequency: '',
+  superfan_favorite_local_text: '',
+  venue_name: '',
+  venue_contact_phone: '',
+  venue_website: '',
 }
 
 export default function ProfileEditPage() {
@@ -70,6 +103,7 @@ export default function ProfileEditPage() {
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [newVideoClip, setNewVideoClip] = useState<VideoClip>({ title: '', url: '', platform: 'youtube' })
+  const [accountRole, setAccountRole] = useState<AccountRole>('comedian')
 
   useEffect(() => {
     loadProfile()
@@ -85,19 +119,35 @@ export default function ProfileEditPage() {
         return
       }
 
-      // Load base profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+      const authRoleHint = await getAuthRoleHintFromClient(supabase)
 
-      // Load comedian profile
-      const { data: comedianProfile } = await supabase
-        .from('comedian_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+      const [
+        { data: profile },
+        { data: comedianProfile },
+        { data: superfanProfile },
+        { data: venueProfile },
+      ] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('comedian_profiles').select('*').eq('id', user.id).maybeSingle(),
+        supabase.from('superfan_profiles').select('*').eq('id', user.id).maybeSingle(),
+        supabase.from('venue_profiles').select('*').eq('id', user.id).maybeSingle(),
+      ])
+
+      const resolvedRole = resolveAccountRoleWithHints(profile?.role, authRoleHint, {
+        hasSuperfanProfileRow: !!superfanProfile,
+        hasVenueProfileRow: !!venueProfile,
+      })
+
+      if (profile && shouldPersistResolvedRole(profile.role, resolvedRole)) {
+        await supabase
+          .from('profiles')
+          .update({ role: resolvedRole, updated_at: new Date().toISOString() })
+          .eq('id', user.id)
+      }
+
+      setAccountRole(resolvedRole)
+
+      const locals = superfanProfile?.favorite_local_names as string[] | undefined
 
       if (profile) {
         setFormData({
@@ -123,6 +173,13 @@ export default function ProfileEditPage() {
           booking_rate: comedianProfile?.booking_rate || '',
           travel_radius: comedianProfile?.travel_radius || '',
           performance_types: comedianProfile?.performance_types || [],
+          superfan_public_slug: superfanProfile?.public_slug || '',
+          superfan_preferred_styles: superfanProfile?.preferred_comedy_styles || [],
+          superfan_show_frequency: superfanProfile?.show_frequency || '',
+          superfan_favorite_local_text: locals?.length ? locals.join('\n') : '',
+          venue_name: venueProfile?.venue_name || '',
+          venue_contact_phone: venueProfile?.contact_phone || '',
+          venue_website: venueProfile?.website || '',
         })
       }
     } catch (error) {
@@ -145,24 +202,56 @@ export default function ProfileEditPage() {
         return
       }
 
+      const role = accountRole
+
       const currentYear = new Date().getFullYear()
       let comedyStartDate: string | null = null
-      const yearRaw = String(formData.comedy_start_year ?? '').trim()
-      const digitsOnly = yearRaw.replace(/\D/g, '')
-      if (digitsOnly.length > 0) {
-        const y = parseInt(digitsOnly.slice(0, 4), 10)
-        if (Number.isNaN(y) || y < 1970 || y > currentYear) {
-          setMessage({
-            type: 'error',
-            text: `Enter a valid year between 1970 and ${currentYear} (e.g. 2018), or clear the field.`,
-          })
+      if (role === 'comedian') {
+        const yearRaw = String(formData.comedy_start_year ?? '').trim()
+        const digitsOnly = yearRaw.replace(/\D/g, '')
+        if (digitsOnly.length > 0) {
+          const y = parseInt(digitsOnly.slice(0, 4), 10)
+          if (Number.isNaN(y) || y < 1970 || y > currentYear) {
+            setMessage({
+              type: 'error',
+              text: `Enter a valid year between 1970 and ${currentYear} (e.g. 2018), or clear the field.`,
+            })
+            setIsSaving(false)
+            return
+          }
+          comedyStartDate = `${y}-01-01`
+        }
+      }
+
+      let superfanSlug: string | null = null
+      if (role === 'superfan') {
+        const raw = formData.superfan_public_slug.trim()
+        if (raw.length > 0) {
+          if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(raw) || raw.length < 2) {
+            setMessage({
+              type: 'error',
+              text: 'Public URL must be 2+ characters: lowercase letters, numbers, and single hyphens between segments.',
+            })
+            setIsSaving(false)
+            return
+          }
+          superfanSlug = raw
+        }
+      }
+
+      if (role === 'venue') {
+        const vn = formData.venue_name.trim()
+        if (!vn) {
+          setMessage({ type: 'error', text: 'Please enter your venue name.' })
           setIsSaving(false)
           return
         }
-        comedyStartDate = `${y}-01-01`
       }
 
-      // Update base profile
+      const dbRole: 'comedian' | 'superfan' | 'venue' =
+        role === 'superfan' ? 'superfan' : role === 'venue' ? 'venue' : 'comedian'
+
+      // Update base profile (persist role so DB matches signup / UI)
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert(
@@ -175,6 +264,7 @@ export default function ProfileEditPage() {
             state: formData.state,
             profile_photo_url: formData.profile_photo_url,
             is_public: formData.is_public,
+            role: dbRole,
             updated_at: new Date().toISOString(),
           },
           { onConflict: 'id' }
@@ -185,36 +275,93 @@ export default function ProfileEditPage() {
         throw new Error(profileError.message)
       }
 
-      // Update comedian profile (explicit conflict target helps inserts vs updates)
-      const { error: comedianError } = await supabase
-        .from('comedian_profiles')
-        .upsert(
-          {
-            id: user.id,
-            username: formData.username || null,
-            headline: formData.headline,
-            comedy_start_date: comedyStartDate,
-            comedy_styles: formData.comedy_styles,
-            social_links: formData.social_links,
-            video_clips: formData.video_clips,
-            available_for_booking: formData.available_for_booking,
-            booking_rate: formData.booking_rate,
-            travel_radius: formData.travel_radius,
-            performance_types: formData.performance_types,
-          },
-          { onConflict: 'id' }
-        )
+      if (role === 'comedian') {
+        const { error: comedianError } = await supabase
+          .from('comedian_profiles')
+          .upsert(
+            {
+              id: user.id,
+              username: formData.username || null,
+              headline: formData.headline,
+              comedy_start_date: comedyStartDate,
+              comedy_styles: formData.comedy_styles,
+              social_links: formData.social_links,
+              video_clips: formData.video_clips,
+              available_for_booking: formData.available_for_booking,
+              booking_rate: formData.booking_rate,
+              travel_radius: formData.travel_radius,
+              performance_types: formData.performance_types,
+            },
+            { onConflict: 'id' }
+          )
 
-      if (comedianError) {
-        console.error('Comedian profile error:', comedianError.message, comedianError.code, comedianError.details)
-        throw new Error(comedianError.message)
+        if (comedianError) {
+          console.error('Comedian profile error:', comedianError.message, comedianError.code, comedianError.details)
+          throw new Error(comedianError.message)
+        }
+
+        if (formData.username) {
+          router.push(`/comedians/${formData.username}`)
+        } else {
+          setMessage({ type: 'success', text: 'Profile saved! Set a username to view your public profile.' })
+        }
+        return
       }
 
-      // Redirect to public profile after saving
-      if (formData.username) {
-        router.push(`/comedians/${formData.username}`)
-      } else {
-        setMessage({ type: 'success', text: 'Profile saved! Set a username to view your public profile.' })
+      if (role === 'superfan') {
+        const favoriteLocals = parseFavoriteLocalNames(formData.superfan_favorite_local_text)
+        const { error: superfanError } = await supabase
+          .from('superfan_profiles')
+          .upsert(
+            {
+              id: user.id,
+              public_slug: superfanSlug,
+              preferred_comedy_styles: formData.superfan_preferred_styles,
+              show_frequency: formData.superfan_show_frequency.trim() || null,
+              favorite_local_names: favoriteLocals,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'id' }
+          )
+
+        if (superfanError) {
+          console.error('Superfan profile error:', superfanError.message, superfanError.code, superfanError.details)
+          throw new Error(superfanError.message)
+        }
+
+        if (superfanSlug) {
+          router.push(`/superfans/${superfanSlug}`)
+        } else {
+          setMessage({
+            type: 'success',
+            text: 'Profile saved! Add a public URL slug to share your fan card.',
+          })
+        }
+        return
+      }
+
+      if (role === 'venue') {
+        const { error: venueError } = await supabase
+          .from('venue_profiles')
+          .upsert(
+            {
+              id: user.id,
+              venue_name: formData.venue_name.trim(),
+              contact_phone: formData.venue_contact_phone.trim() || null,
+              website: formData.venue_website.trim() || null,
+              city: formData.city.trim() || null,
+              state: formData.state.trim() || null,
+            },
+            { onConflict: 'id' }
+          )
+
+        if (venueError) {
+          console.error('Venue profile error:', venueError.message, venueError.code, venueError.details)
+          throw new Error(venueError.message)
+        }
+
+        setMessage({ type: 'success', text: 'Venue profile saved.' })
+        return
       }
     } catch (error) {
       console.error('Error saving profile:', error)
@@ -355,21 +502,40 @@ export default function ProfileEditPage() {
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Edit Your Profile</h1>
             <p className="text-[#A0A0A0]">
-              Build your comedian profile to get discovered by venues and connect with the community.
+              {accountRole === 'comedian' && (
+                <>Build your comedian profile to get discovered by venues and connect with the community.</>
+              )}
+              {accountRole === 'superfan' && (
+                <>Customize your public fan card: comedy taste, how often you go out, and locals you love.</>
+              )}
+              {accountRole === 'venue' && (
+                <>Keep your venue details current so comedians and fans can find you.</>
+              )}
             </p>
           </div>
-          {formData.username ? (
+          {accountRole === 'comedian' && formData.username ? (
             <Link href={`/comedians/${formData.username}`}>
               <Button variant="secondary" className="flex items-center gap-2">
                 <ExternalLink className="w-4 h-4" />
                 View Public Profile
               </Button>
             </Link>
-          ) : (
+          ) : accountRole === 'superfan' && formData.superfan_public_slug ? (
+            <Link href={`/superfans/${formData.superfan_public_slug}`}>
+              <Button variant="secondary" className="flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                View public card
+              </Button>
+            </Link>
+          ) : accountRole === 'comedian' ? (
             <div className="text-sm text-[#A0A0A0] bg-[#1A0033]/40 px-4 py-2 rounded-xl border border-[#7B2FF7]/20">
               💡 Set a username below to get your public profile link
             </div>
-          )}
+          ) : accountRole === 'superfan' ? (
+            <div className="text-sm text-[#A0A0A0] bg-[#00F5D4]/10 px-4 py-2 rounded-xl border border-[#00F5D4]/25">
+              Add a URL slug below to share your fan card
+            </div>
+          ) : null}
         </div>
 
         {/* Message */}
@@ -395,33 +561,49 @@ export default function ProfileEditPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 id="full_name"
-                label="Full Name / Stage Name"
+                label={
+                  accountRole === 'venue'
+                    ? 'Contact / organizer name'
+                    : accountRole === 'superfan'
+                      ? 'Display name'
+                      : 'Full Name / Stage Name'
+                }
                 value={formData.full_name ?? ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                placeholder="Your name or stage name"
+                placeholder={
+                  accountRole === 'venue'
+                    ? 'Booker or GM name'
+                    : accountRole === 'superfan'
+                      ? 'How you appear on your fan card'
+                      : 'Your name or stage name'
+                }
               />
               
-              <Input
-                id="username"
-                label="Username"
-                value={formData.username ?? ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') }))}
-                placeholder="yourname"
-                icon={<User className="w-4 h-4" />}
-              />
-              {formData.username && (
-                <p className="text-xs text-[#A0A0A0] -mt-4">
-                  Your profile: <span className="text-[#7B2FF7]">novaacta.com/comedians/{formData.username}</span>
-                </p>
+              {accountRole === 'comedian' && (
+                <>
+                  <Input
+                    id="username"
+                    label="Username"
+                    value={formData.username ?? ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') }))}
+                    placeholder="yourname"
+                    icon={<User className="w-4 h-4" />}
+                  />
+                  {formData.username && (
+                    <p className="text-xs text-[#A0A0A0] -mt-4 md:col-span-2">
+                      Your profile: <span className="text-[#7B2FF7]">novaacta.com/comedians/{formData.username}</span>
+                    </p>
+                  )}
+                  
+                  <Input
+                    id="headline"
+                    label="Headline"
+                    value={formData.headline ?? ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, headline: e.target.value }))}
+                    placeholder="e.g., Denver-based observational comic"
+                  />
+                </>
               )}
-              
-              <Input
-                id="headline"
-                label="Headline"
-                value={formData.headline ?? ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, headline: e.target.value }))}
-                placeholder="e.g., Denver-based observational comic"
-              />
             </div>
 
             {/* Profile Photo Upload */}
@@ -497,7 +679,13 @@ export default function ProfileEditPage() {
               <textarea
                 value={formData.bio ?? ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                placeholder="Tell venues and fellow comedians about yourself, your comedy journey, and what makes you unique..."
+                placeholder={
+                  accountRole === 'superfan'
+                    ? 'A line or two about you as a comedy fan…'
+                    : accountRole === 'venue'
+                      ? 'What makes your room special for comedians and audiences?'
+                      : 'Tell venues and fellow comedians about yourself, your comedy journey, and what makes you unique...'
+                }
                 rows={4}
                 className="w-full px-4 py-3 bg-[#1A1A1A] border border-[#333] rounded-xl text-white placeholder-[#666] focus:outline-none focus:border-[#7B2FF7] focus:ring-1 focus:ring-[#7B2FF7] transition-colors resize-none"
               />
@@ -536,6 +724,46 @@ export default function ProfileEditPage() {
             </div>
           </Card>
 
+          {accountRole === 'superfan' && (
+            <SuperfanProfileFields
+              value={{
+                public_slug: formData.superfan_public_slug,
+                preferred_styles: formData.superfan_preferred_styles,
+                show_frequency: formData.superfan_show_frequency,
+                favorite_local_names: formData.superfan_favorite_local_text,
+              }}
+              onChange={(next) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  superfan_public_slug: next.public_slug,
+                  superfan_preferred_styles: next.preferred_styles,
+                  superfan_show_frequency: next.show_frequency,
+                  superfan_favorite_local_text: next.favorite_local_names,
+                }))
+              }
+            />
+          )}
+
+          {accountRole === 'venue' && (
+            <VenueProfileFields
+              value={{
+                venue_name: formData.venue_name,
+                contact_phone: formData.venue_contact_phone,
+                website: formData.venue_website,
+              }}
+              onChange={(next) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  venue_name: next.venue_name,
+                  venue_contact_phone: next.contact_phone,
+                  venue_website: next.website,
+                }))
+              }
+            />
+          )}
+
+          {accountRole === 'comedian' && (
+          <>
           {/* Comedy Info */}
           <Card className="p-6">
             <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
@@ -815,6 +1043,8 @@ export default function ProfileEditPage() {
               )}
             </div>
           </Card>
+          </>
+          )}
 
           {/* Privacy */}
           <Card className="p-6">
@@ -822,7 +1052,15 @@ export default function ProfileEditPage() {
               <div>
                 <h3 className="text-lg font-semibold text-white">Public Profile</h3>
                 <p className="text-[#A0A0A0] text-sm">
-                  Allow venues and other comedians to find you in the directory
+                  {accountRole === 'comedian' && (
+                    <>Allow venues and other comedians to find you in the directory</>
+                  )}
+                  {accountRole === 'superfan' && (
+                    <>When on, your fan card can be viewed at your public URL (if you set a slug).</>
+                  )}
+                  {accountRole === 'venue' && (
+                    <>Controls visibility of your listing in NovaActa where applicable.</>
+                  )}
                 </p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">

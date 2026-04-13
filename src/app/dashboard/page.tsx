@@ -6,12 +6,19 @@ import { useRouter } from 'next/navigation'
 import { 
   MapPin, BookOpen, MessageSquare,
   Users, ArrowRight, Plus, User,
-  Mic, Edit, Loader2
+  Mic, Edit, Loader2, Building2
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import { createClient } from '@/lib/supabase/client'
+import {
+  getAuthRoleHintFromClient,
+  resolveAccountRoleWithHints,
+  shouldPersistResolvedRole,
+  type AccountRole,
+} from '@/lib/account-role'
 import ComedianPokemonCard from '@/components/comedian/ComedianPokemonCard'
+import SuperfanTrainerCard from '@/components/superfan/SuperfanTrainerCard'
 
 interface UserProfile {
   id: string
@@ -38,11 +45,29 @@ interface ComedianProfile {
   social_links?: Record<string, string>
 }
 
+interface SuperfanProfileRow {
+  public_slug: string | null
+  preferred_comedy_styles: string[]
+  show_frequency: string | null
+  favorite_local_names: string[]
+  shows_attended: number
+  membership_tier?: 'free' | 'premium'
+}
+
+interface VenueProfileRow {
+  venue_name: string
+  contact_phone?: string | null
+  website?: string | null
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [comedianProfile, setComedianProfile] = useState<ComedianProfile | null>(null)
+  const [superfanProfile, setSuperfanProfile] = useState<SuperfanProfileRow | null>(null)
+  const [venueProfile, setVenueProfile] = useState<VenueProfileRow | null>(null)
+  const [accountRole, setAccountRole] = useState<AccountRole>('comedian')
 
   useEffect(() => {
     loadUserData()
@@ -58,19 +83,33 @@ export default function DashboardPage() {
         return
       }
 
-      // Load base profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+      const authRoleHint = await getAuthRoleHintFromClient(supabase)
 
-      // Load comedian profile
-      const { data: comedianData } = await supabase
-        .from('comedian_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+      const [
+        { data: profileData },
+        { data: comedianData },
+        { data: superfanData },
+        { data: venueData },
+      ] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('comedian_profiles').select('*').eq('id', user.id).maybeSingle(),
+        supabase.from('superfan_profiles').select('*').eq('id', user.id).maybeSingle(),
+        supabase.from('venue_profiles').select('*').eq('id', user.id).maybeSingle(),
+      ])
+
+      const resolvedRole = resolveAccountRoleWithHints(profileData?.role, authRoleHint, {
+        hasSuperfanProfileRow: !!superfanData,
+        hasVenueProfileRow: !!venueData,
+      })
+
+      if (profileData && shouldPersistResolvedRole(profileData.role, resolvedRole)) {
+        await supabase
+          .from('profiles')
+          .update({ role: resolvedRole, updated_at: new Date().toISOString() })
+          .eq('id', user.id)
+      }
+
+      setAccountRole(resolvedRole)
 
       if (profileData) {
         setProfile({
@@ -94,6 +133,12 @@ export default function DashboardPage() {
 
       if (comedianData) {
         setComedianProfile(comedianData)
+      }
+      if (superfanData) {
+        setSuperfanProfile(superfanData as SuperfanProfileRow)
+      }
+      if (venueData) {
+        setVenueProfile(venueData as VenueProfileRow)
       }
     } catch (error) {
       console.error('Error loading user data:', error)
@@ -124,8 +169,22 @@ export default function DashboardPage() {
   }
 
   const isProfileComplete = () => {
-    return profile?.full_name && profile?.bio && profile?.city && comedianProfile?.username
+    if (!profile?.full_name?.trim() || !profile?.city?.trim()) return false
+    if (accountRole === 'comedian') {
+      return !!(profile.bio?.trim() && comedianProfile?.username)
+    }
+    if (accountRole === 'superfan') {
+      return !!profile.state?.trim()
+    }
+    if (accountRole === 'venue') {
+      return !!(venueProfile?.venue_name?.trim())
+    }
+    return false
   }
+
+  const showComedianHero = accountRole === 'comedian' && !!comedianProfile
+  const showSuperfanHero = accountRole === 'superfan' && !!profile
+  const showSuperfanDashboardHeader = showSuperfanHero
 
   if (isLoading) {
     return (
@@ -137,7 +196,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen py-8 relative">
-      {comedianProfile && (
+      {(showComedianHero || showSuperfanHero) && (
         <div className="fixed inset-0 pointer-events-none -z-10">
           <div className="absolute top-1/4 left-1/4 w-[480px] h-[480px] bg-[#7B2FF7]/10 rounded-full blur-[120px] animate-pulse" />
           <div
@@ -150,7 +209,7 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            {!comedianProfile && (
+            {!showComedianHero && !showSuperfanDashboardHeader && (
               <>
                 {profile?.profile_photo_url || profile?.avatar_url ? (
                   <img
@@ -167,12 +226,12 @@ export default function DashboardPage() {
             )}
             <div>
               <h1 className="text-2xl font-bold text-white">
-                {comedianProfile
+                {showComedianHero || showSuperfanDashboardHeader
                   ? 'Dashboard'
                   : `Welcome${profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋`}
               </h1>
               <p className="text-[#A0A0A0] text-sm sm:text-base">
-                {comedianProfile ? (
+                {showComedianHero || showSuperfanDashboardHeader ? (
                   <>Member since {formatMemberSince()}</>
                 ) : (
                   <>
@@ -209,9 +268,25 @@ export default function DashboardPage() {
           <Card className="mb-8 p-6 bg-gradient-to-r from-[#7B2FF7]/20 to-[#F72585]/20 border-[#7B2FF7]/30">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-white mb-1">Complete Your Profile 🎤</h2>
+                <h2 className="text-lg font-semibold text-white mb-1">
+                  {accountRole === 'comedian' && <>Complete your profile 🎤</>}
+                  {accountRole === 'superfan' && <>Complete your fan profile</>}
+                  {accountRole === 'venue' && <>Complete your venue profile 🏢</>}
+                </h2>
                 <p className="text-[#A0A0A0]">
-                  Add your bio, location, and comedy info to get discovered by venues and connect with other comedians.
+                  {accountRole === 'comedian' && (
+                    <>Add your bio, location, and comedy info to get discovered by venues and connect with other comedians.</>
+                  )}
+                  {accountRole === 'superfan' && (
+                    <>
+                      Add your <span className="text-white/90">home state</span> (and city) so your fan card
+                      shows where you&apos;re based — then add comedy taste and a public link when you&apos;re
+                      ready.
+                    </>
+                  )}
+                  {accountRole === 'venue' && (
+                    <>Add your venue name, location, and contact details so talent can reach you.</>
+                  )}
                 </p>
               </div>
               <Link href="/dashboard/profile">
@@ -224,7 +299,7 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {comedianProfile && profile && (
+        {showComedianHero && profile && comedianProfile && (
           <section className="mb-10 max-w-5xl mx-auto">
             <ComedianPokemonCard
               mode="dashboard"
@@ -250,6 +325,76 @@ export default function DashboardPage() {
                 social_links: comedianProfile.social_links,
               }}
             />
+          </section>
+        )}
+
+        {showSuperfanHero && (
+          <section className="mb-10 max-w-5xl mx-auto">
+            <SuperfanTrainerCard
+              mode="dashboard"
+              profile={{
+                full_name: profile.full_name,
+                bio: profile.bio,
+                city: profile.city,
+                state: profile.state,
+                profile_photo_url: profile.profile_photo_url,
+                avatar_url: profile.avatar_url,
+              }}
+              superfan={{
+                public_slug: superfanProfile?.public_slug ?? null,
+                preferred_comedy_styles: superfanProfile?.preferred_comedy_styles ?? [],
+                show_frequency: superfanProfile?.show_frequency ?? null,
+                favorite_local_names: superfanProfile?.favorite_local_names ?? [],
+                shows_attended: superfanProfile?.shows_attended ?? 0,
+                membership_tier: superfanProfile?.membership_tier,
+              }}
+            />
+          </section>
+        )}
+
+        {accountRole === 'venue' && profile && (
+          <section className="mb-10 max-w-5xl mx-auto">
+            <Card className="p-8 border border-[#FFB627]/25 bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D]">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-6">
+                <div className="w-14 h-14 rounded-2xl bg-[#FFB627]/15 flex items-center justify-center shrink-0">
+                  <Building2 className="w-7 h-7 text-[#FFB627]" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#FFB627]">
+                    Venue account
+                  </p>
+                  <h2 className="text-2xl font-bold text-white">
+                    {venueProfile?.venue_name || 'Your venue'}
+                  </h2>
+                  <p className="text-[#A0A0A0] text-sm">
+                    {getLocation() || 'Add your city and state in Edit Profile.'}
+                  </p>
+                  {(venueProfile?.contact_phone || venueProfile?.website) && (
+                    <div className="flex flex-wrap gap-4 text-sm pt-2">
+                      {venueProfile.contact_phone && (
+                        <span className="text-[#E0E0E0]">{venueProfile.contact_phone}</span>
+                      )}
+                      {venueProfile.website && (
+                        <a
+                          href={venueProfile.website.startsWith('http') ? venueProfile.website : `https://${venueProfile.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#7B2FF7] hover:underline"
+                        >
+                          Website
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <Link href="/dashboard/profile">
+                  <Button variant="secondary" size="sm">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit venue details
+                  </Button>
+                </Link>
+              </div>
+            </Card>
           </section>
         )}
 
@@ -343,7 +488,7 @@ export default function DashboardPage() {
           {/* Sidebar */}
           <div className="space-y-8">
             {/* Video Clips */}
-            {comedianProfile?.video_clips && comedianProfile.video_clips.length > 0 ? (
+            {accountRole === 'comedian' && comedianProfile?.video_clips && comedianProfile.video_clips.length > 0 ? (
             <Card variant="glass" hover={false}>
                 <h2 className="text-lg font-semibold text-white mb-4">Your Video Clips</h2>
                 <div className="space-y-3">
@@ -368,7 +513,7 @@ export default function DashboardPage() {
                   </Button>
                 </Link>
             </Card>
-            ) : (
+            ) : accountRole === 'comedian' ? (
             <Card variant="glass" hover={false}>
                 <h2 className="text-lg font-semibold text-white mb-4">Video Clips</h2>
                 <p className="text-[#A0A0A0] text-sm mb-4">
@@ -381,7 +526,7 @@ export default function DashboardPage() {
                   </Button>
                 </Link>
             </Card>
-            )}
+            ) : null}
 
             {/* Quick Links */}
             <Card variant="glass" hover={false}>
@@ -408,13 +553,22 @@ export default function DashboardPage() {
                   <Mic className="w-5 h-5 text-[#F72585]" />
                   <span className="text-[#A0A0A0] hover:text-white">Find Open Mics</span>
                 </Link>
-                {comedianProfile?.username && (
+                {accountRole === 'comedian' && comedianProfile?.username && (
                 <Link
                     href={`/comedians/${comedianProfile.username}`}
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
                 >
                     <ArrowRight className="w-5 h-5 text-[#FFB627]" />
                     <span className="text-[#A0A0A0] hover:text-white">View Public Profile</span>
+                </Link>
+                )}
+                {accountRole === 'superfan' && superfanProfile?.public_slug && (
+                <Link
+                    href={`/superfans/${superfanProfile.public_slug}`}
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                >
+                    <ArrowRight className="w-5 h-5 text-[#00F5D4]" />
+                    <span className="text-[#A0A0A0] hover:text-white">View public fan card</span>
                 </Link>
                 )}
               </div>

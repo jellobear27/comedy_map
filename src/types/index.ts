@@ -216,6 +216,16 @@ export interface Comedian extends User {
   credits?: string[]
 }
 
+/** How often a superfan goes to live comedy (stored in superfan_profiles.show_frequency) */
+export const SUPERFAN_SHOW_FREQUENCY = [
+  { value: 'weekly_plus', label: 'Weekly or more' },
+  { value: 'weekly', label: 'About once a week' },
+  { value: 'monthly', label: 'A few times a month' },
+  { value: 'monthly_light', label: 'About once a month' },
+  { value: 'few_times_year', label: 'A few times a year' },
+  { value: 'whenever', label: 'Whenever I can' },
+] as const
+
 export const COMEDY_STYLES = [
   'Observational',
   'Self-deprecating',

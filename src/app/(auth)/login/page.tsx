@@ -67,6 +67,7 @@ function LoginForm() {
       })
 
       if (error) throw error
+      await supabase.auth.refreshSession()
       router.push('/dashboard')
     } catch (err) {
       setError(getAuthErrorMessage(err))
