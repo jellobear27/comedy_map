@@ -83,24 +83,31 @@ export default function HomePage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7B2FF7]/10 border border-[#7B2FF7]/30 mb-8 animate-float">
             <Zap className="w-4 h-4 text-[#7B2FF7]" />
-            <span className="text-sm font-medium text-[#7B2FF7]">Built for comics. Backed by community.</span>
+            <span className="text-sm font-medium text-[#7B2FF7]">Mics · Venues · Roast · Shows</span>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold leading-tight mb-6">
-            <span className="text-white">Comedy. Culture.</span>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight mb-6 max-w-4xl mx-auto">
+            <span className="text-white">Designed for</span>
             <br />
             <span className="bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B] bg-clip-text text-transparent">
-              Connection.
+              comedians, venues, and superfans.
             </span>
           </h1>
 
-          <p className="text-xl sm:text-2xl text-white font-medium mb-4">
-            The stage is yours.
-          </p>
-          <p className="text-lg text-[#A0A0A0] max-w-2xl mx-auto mb-10">
-            Discover open mics, learn from the best, and connect with comedians across the USA. 
-          </p>
+          <div className="text-lg sm:text-xl text-[#C8C8C8] max-w-2xl mx-auto mb-10 space-y-4 leading-relaxed">
+            <p className="text-white/90">
+              Find mics, connect with fellow comedians, fill your venue, and never miss a show—then hop on{' '}
+              <Link href="/community/roast-me" className="text-[#F72585] hover:text-[#FF6B6B] underline underline-offset-2">
+                Roast Me
+              </Link>{' '}
+              to connect with working comics.
+            </p>
+            <p>
+              Network with fellow comics, book better rooms, and unlock bigger opportunities as you grow—all in one
+              place.
+            </p>
+          </div>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">

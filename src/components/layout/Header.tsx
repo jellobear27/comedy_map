@@ -20,6 +20,15 @@ const allNavLinks = [
 // Filter to only show enabled features
 const navLinks = allNavLinks.filter(link => FEATURES[link.feature])
 
+function isEmphasisNavLink(href: string) {
+  return href === '/community' || href === '/for-venues'
+}
+
+function isNavLinkActive(href: string, pathname: string) {
+  if (href === '/') return pathname === '/'
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
 interface HeaderProps {
   user?: { id: string; email: string; full_name?: string } | null
 }
@@ -77,11 +86,13 @@ export default function Header({ user }: HeaderProps) {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-5 xl:gap-6">
             {navLinks.map((link) => {
               const isOpenMics = link.href === '/open-mics'
               const isTheatrical = isOpenMics && showOpenMicsAnimation && pathname === '/'
-              
+              const emphasis = !isTheatrical && isEmphasisNavLink(link.href)
+              const active = isNavLinkActive(link.href, pathname)
+
               return (
               <Link
                 key={link.href}
@@ -99,10 +110,13 @@ export default function Header({ user }: HeaderProps) {
                         text-white font-bold shadow-2xl
                         shadow-[#F72585]/50
                       `
-                      : `text-sm ${pathname === link.href 
-                    ? 'text-white' 
-                    : 'text-[#A0A0A0] hover:text-white'
-                        }`
+                      : emphasis
+                        ? `text-sm font-semibold px-3.5 py-2 rounded-xl border shadow-sm
+                            ${active
+                              ? 'text-white border-[#7B2FF7]/70 bg-[#7B2FF7]/25 shadow-[0_0_24px_rgba(123,47,247,0.2)]'
+                              : 'text-white/95 border-[#7B2FF7]/45 bg-[#7B2FF7]/12 hover:border-[#F72585]/55 hover:bg-[#7B2FF7]/22'
+                            }`
+                        : `text-sm ${active ? 'text-white' : 'text-[#A0A0A0] hover:text-white'}`
                   }
                 `}
                   style={isTheatrical ? {
@@ -116,7 +130,7 @@ export default function Header({ user }: HeaderProps) {
                   {isTheatrical && animationPhase === 'settle' && (
                     <Sparkles className="inline-block w-5 h-5 ml-2 animate-pulse" />
                   )}
-                  {pathname === link.href && !isTheatrical && (
+                  {active && !isTheatrical && !emphasis && (
                   <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-[#7B2FF7] to-[#F72585] rounded-full" />
                 )}
               </Link>
@@ -171,19 +185,28 @@ export default function Header({ user }: HeaderProps) {
         {isMobileMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-[#050505]/95 backdrop-blur-xl border-b border-[#7B2FF7]/10 p-4">
             <div className="flex flex-col gap-4">
-              {navLinks.map((link) => (
+              {navLinks.map((link) => {
+                const emphasis = isEmphasisNavLink(link.href)
+                const active = isNavLinkActive(link.href, pathname)
+                return (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`
-                    text-lg font-medium py-2 transition-colors
-                    ${pathname === link.href ? 'text-white' : 'text-[#A0A0A0]'}
+                    text-lg font-medium py-3 px-3 rounded-xl transition-colors
+                    ${emphasis
+                      ? active
+                        ? 'text-white border border-[#7B2FF7]/70 bg-[#7B2FF7]/25'
+                        : 'text-white border border-[#7B2FF7]/45 bg-[#7B2FF7]/12'
+                      : active
+                        ? 'text-white bg-white/5'
+                        : 'text-[#A0A0A0]'}
                   `}
                 >
                   {link.label}
                 </Link>
-              ))}
+              )})}
               <hr className="border-[#7B2FF7]/20" />
               {user ? (
                 <>
