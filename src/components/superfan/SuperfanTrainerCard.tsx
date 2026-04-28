@@ -9,9 +9,11 @@ import {
   Users,
   Zap,
   Award,
+  Instagram,
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { SUPERFAN_SHOW_FREQUENCY } from '@/types'
+import SuperfanLikeButton from '@/components/superfan/SuperfanLikeButton'
 
 export type SuperfanTrainerProfile = {
   full_name: string | null
@@ -29,6 +31,10 @@ export type SuperfanTrainerData = {
   favorite_local_names: string[]
   shows_attended: number
   membership_tier?: 'free' | 'premium'
+  /** Shown on public card when user opts in */
+  instagram_handle?: string | null
+  show_instagram_on_card?: boolean
+  card_like_count?: number
 }
 
 type Mode = 'public' | 'dashboard'
@@ -37,6 +43,10 @@ export type SuperfanTrainerCardProps = {
   profile: SuperfanTrainerProfile
   superfan: SuperfanTrainerData
   mode: Mode
+  /** Public page: user id of the card owner for likes */
+  likeTargetUserId?: string | null
+  /** Path for post-login redirect, e.g. /superfans/jamie */
+  likeLoginRedirect?: string
 }
 
 /** Match ComedianPokemonCard accent chips */
@@ -47,10 +57,20 @@ function frequencyLabel(value: string | null): string | null {
   return SUPERFAN_SHOW_FREQUENCY.find((o) => o.value === value)?.label ?? value
 }
 
+function instagramHref(raw: string | null | undefined): string | null {
+  if (!raw?.trim()) return null
+  const t = raw.trim()
+  if (t.startsWith('http')) return t
+  const handle = t.replace(/^@/, '')
+  return `https://instagram.com/${handle}`
+}
+
 export default function SuperfanTrainerCard({
   profile,
   superfan,
   mode,
+  likeTargetUserId,
+  likeLoginRedirect,
 }: SuperfanTrainerCardProps) {
   const styles = superfan.preferred_comedy_styles || []
   const locals = superfan.favorite_local_names || []
@@ -61,19 +81,36 @@ export default function SuperfanTrainerCard({
 
   const hasTaste = styles.length > 0
 
+  const igUrl = instagramHref(superfan.instagram_handle)
+  const showIgBlock =
+    !!igUrl &&
+    !!superfan.show_instagram_on_card &&
+    (mode === 'public' || mode === 'dashboard')
+
   return (
     <div className="relative group">
       {/* Same outer glow as ComedianPokemonCard */}
       <div className="absolute -inset-1 bg-gradient-to-r from-[#7B2FF7] via-[#F72585] via-[#00F5D4] to-[#7B2FF7] rounded-[2rem] opacity-75 blur-lg group-hover:opacity-100 transition-opacity duration-500 animate-gradient-x" />
 
       <div className="relative bg-gradient-to-br from-[#0D0016] via-[#1A0033] to-[#0D0016] rounded-[2rem] border border-[#7B2FF7]/30 overflow-hidden">
-        <div className="flex items-center gap-3 px-8 py-4 border-b border-[#7B2FF7]/20 bg-[#7B2FF7]/5">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#7B2FF7] to-[#F72585] flex items-center justify-center shrink-0">
-            <Heart className="w-5 h-5 text-white fill-white/20" />
+        <div className="flex items-center justify-between gap-4 px-6 sm:px-8 py-4 border-b border-[#7B2FF7]/20 bg-[#7B2FF7]/5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#7B2FF7] to-[#F72585] flex items-center justify-center shrink-0">
+              <Heart className="w-5 h-5 text-white fill-white/20" />
+            </div>
+            <span className="text-[#A0A0A0] font-medium uppercase tracking-wider text-sm truncate">
+              Comedy Superfan
+            </span>
           </div>
-          <span className="text-[#A0A0A0] font-medium uppercase tracking-wider text-sm">
-            Comedy Superfan
-          </span>
+          {mode === 'public' && likeTargetUserId && likeLoginRedirect && (
+            <div className="shrink-0 max-w-[min(100%,18rem)] sm:max-w-none">
+              <SuperfanLikeButton
+                likedUserId={likeTargetUserId}
+                initialCount={superfan.card_like_count ?? 0}
+                loginRedirect={likeLoginRedirect}
+              />
+            </div>
+          )}
         </div>
 
         <div className="p-8">
@@ -279,6 +316,28 @@ export default function SuperfanTrainerCard({
                     </Link>{' '}
                     — tell folks what you love about live comedy.
                   </p>
+                </div>
+              )}
+
+              {showIgBlock && (
+                <div className="rounded-xl border border-[#E1306C]/35 bg-[#E1306C]/5 px-5 py-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#E1306C] mb-3 flex items-center gap-2">
+                    <Instagram className="w-4 h-4" />
+                    Connect elsewhere
+                  </h4>
+                  <p className="text-[#C8C8C8] text-sm mb-3">
+                    {mode === 'dashboard'
+                      ? 'Fans will see this Instagram button on your public card.'
+                      : "Say hi on Instagram — NovaActa doesn't moderate DMs off-site."}
+                  </p>
+                  <a
+                    href={igUrl!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#833AB4] via-[#E1306C] to-[#F77737] text-white text-sm font-semibold hover:opacity-95 transition-opacity"
+                  >
+                    Instagram
+                  </a>
                 </div>
               )}
             </div>

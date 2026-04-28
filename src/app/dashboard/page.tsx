@@ -52,6 +52,9 @@ interface SuperfanProfileRow {
   favorite_local_names: string[]
   shows_attended: number
   membership_tier?: 'free' | 'premium'
+  instagram_handle?: string | null
+  show_instagram_on_card?: boolean
+  card_like_count?: number
 }
 
 interface VenueProfileRow {
@@ -347,6 +350,9 @@ export default function DashboardPage() {
                 favorite_local_names: superfanProfile?.favorite_local_names ?? [],
                 shows_attended: superfanProfile?.shows_attended ?? 0,
                 membership_tier: superfanProfile?.membership_tier,
+                instagram_handle: superfanProfile?.instagram_handle ?? null,
+                show_instagram_on_card: !!superfanProfile?.show_instagram_on_card,
+                card_like_count: superfanProfile?.card_like_count ?? 0,
               }}
             />
           </section>

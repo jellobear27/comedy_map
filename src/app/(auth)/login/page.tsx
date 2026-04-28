@@ -40,10 +40,16 @@ function LoginForm() {
 
     try {
       const supabase = createClient()
+      const nextParam = searchParams.get('next')
+      const safeNext =
+        nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')
+          ? nextParam
+          : '/dashboard'
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext)}`,
         },
       })
 
@@ -68,7 +74,12 @@ function LoginForm() {
 
       if (error) throw error
       await supabase.auth.refreshSession()
-      router.push('/dashboard')
+      const nextParam = searchParams.get('next')
+      const safeNext =
+        nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')
+          ? nextParam
+          : '/dashboard'
+      router.push(safeNext)
     } catch (err) {
       setError(getAuthErrorMessage(err))
     } finally {

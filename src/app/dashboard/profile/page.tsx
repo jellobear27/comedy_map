@@ -62,6 +62,8 @@ interface ProfileFormData {
   superfan_preferred_styles: string[]
   superfan_show_frequency: string
   superfan_favorite_local_text: string
+  superfan_instagram_handle: string
+  superfan_show_instagram_on_card: boolean
 
   // Venue profile
   venue_name: string
@@ -90,6 +92,8 @@ const initialFormData: ProfileFormData = {
   superfan_preferred_styles: [],
   superfan_show_frequency: '',
   superfan_favorite_local_text: '',
+  superfan_instagram_handle: '',
+  superfan_show_instagram_on_card: false,
   venue_name: '',
   venue_contact_phone: '',
   venue_website: '',
@@ -177,6 +181,8 @@ export default function ProfileEditPage() {
           superfan_preferred_styles: superfanProfile?.preferred_comedy_styles || [],
           superfan_show_frequency: superfanProfile?.show_frequency || '',
           superfan_favorite_local_text: locals?.length ? locals.join('\n') : '',
+          superfan_instagram_handle: (superfanProfile?.instagram_handle as string) || '',
+          superfan_show_instagram_on_card: !!(superfanProfile?.show_instagram_on_card as boolean),
           venue_name: venueProfile?.venue_name || '',
           venue_contact_phone: venueProfile?.contact_phone || '',
           venue_website: venueProfile?.website || '',
@@ -319,6 +325,8 @@ export default function ProfileEditPage() {
               preferred_comedy_styles: formData.superfan_preferred_styles,
               show_frequency: formData.superfan_show_frequency.trim() || null,
               favorite_local_names: favoriteLocals,
+              instagram_handle: formData.superfan_instagram_handle.trim() || null,
+              show_instagram_on_card: formData.superfan_show_instagram_on_card,
               updated_at: new Date().toISOString(),
             },
             { onConflict: 'id' }
@@ -731,6 +739,8 @@ export default function ProfileEditPage() {
                 preferred_styles: formData.superfan_preferred_styles,
                 show_frequency: formData.superfan_show_frequency,
                 favorite_local_names: formData.superfan_favorite_local_text,
+                instagram_handle: formData.superfan_instagram_handle,
+                show_instagram_on_card: formData.superfan_show_instagram_on_card,
               }}
               onChange={(next) =>
                 setFormData((prev) => ({
@@ -739,6 +749,8 @@ export default function ProfileEditPage() {
                   superfan_preferred_styles: next.preferred_styles,
                   superfan_show_frequency: next.show_frequency,
                   superfan_favorite_local_text: next.favorite_local_names,
+                  superfan_instagram_handle: next.instagram_handle,
+                  superfan_show_instagram_on_card: next.show_instagram_on_card,
                 }))
               }
             />

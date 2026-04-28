@@ -9,6 +9,8 @@ export type SuperfanFormSlice = {
   preferred_styles: string[]
   show_frequency: string
   favorite_local_names: string
+  instagram_handle: string
+  show_instagram_on_card: boolean
 }
 
 type Props = {
@@ -111,6 +113,37 @@ export default function SuperfanProfileFields({ value, onChange }: Props) {
             <Link2 className="w-3.5 h-3.5 shrink-0 mt-0.5" />
             Shout out locals you love — names only for now; linking to NovaActa profiles can come later.
           </p>
+        </div>
+
+        <div className="rounded-xl border border-[#E1306C]/25 bg-[#E1306C]/5 p-5 space-y-4">
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            Instagram (optional)
+          </h3>
+          <p className="text-xs text-[#A0A0A0] leading-relaxed">
+            Fans can DM you off-site only if you turn this on — your overall profile still follows the public profile
+            toggle above.
+          </p>
+          <div>
+            <label className="block text-sm font-medium text-[#E0E0E0] mb-2">Handle or link</label>
+            <input
+              type="text"
+              value={value.instagram_handle}
+              onChange={(e) => onChange({ ...value, instagram_handle: e.target.value })}
+              placeholder="@yourhandle"
+              className="w-full max-w-md px-4 py-3 bg-[#1A1A1A] border border-[#333] rounded-xl text-white placeholder-[#666] focus:outline-none focus:border-[#E1306C] transition-colors"
+            />
+          </div>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={value.show_instagram_on_card}
+              onChange={(e) => onChange({ ...value, show_instagram_on_card: e.target.checked })}
+              className="mt-1 rounded border-[#333] bg-[#1A1A1A] text-[#E1306C] focus:ring-[#E1306C]"
+            />
+            <span className="text-sm text-[#C8C8C8]">
+              Show Instagram button on my public fan card (only when your card is public and has a URL slug).
+            </span>
+          </label>
         </div>
       </div>
     </Card>

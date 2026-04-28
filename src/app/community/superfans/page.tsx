@@ -153,7 +153,7 @@ export default function SuperfanCommunityPage() {
           </div>
 
           {/* Forum Tabs */}
-          <div className="flex justify-center gap-4 mb-8">
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
             <Link href="/community">
               <Button variant="secondary" size="sm">
                 <Sparkles className="w-4 h-4 mr-2" />
@@ -164,6 +164,12 @@ export default function SuperfanCommunityPage() {
               <Heart className="w-4 h-4 mr-2" />
               Superfan Zone
             </Button>
+            <Link href="/community/superfans/discover">
+              <Button variant="secondary" size="sm">
+                <Users className="w-4 h-4 mr-2" />
+                Browse fan cards
+              </Button>
+            </Link>
           </div>
 
           {/* Search and Create */}

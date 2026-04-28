@@ -87,6 +87,12 @@ export default function OpenMicsPage() {
     loadOpenMics()
   }, [])
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const q = params.get('q')
+    if (q) setSearchQuery(q)
+  }, [])
+
   // Get available cities based on selected state
   const availableCities = useMemo(() => {
     if (!selectedState) return []
