@@ -100,6 +100,8 @@ interface OpenMicEntry extends OpenMicFormData {
   created_at: string
 }
 
+type StatusFilter = 'all' | 'live' | 'pending'
+
 export default function AdminOpenMicsPage() {
   const [openMics, setOpenMics] = useState<OpenMicEntry[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -109,6 +111,7 @@ export default function AdminOpenMicsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterState, setFilterState] = useState('')
   const [filterDay, setFilterDay] = useState<number | ''>('')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [isLoading, setIsLoading] = useState(false)
   const [csvData, setCsvData] = useState('')
   const [importPreview, setImportPreview] = useState<OpenMicFormData[]>([])
@@ -233,6 +236,21 @@ export default function AdminOpenMicsPage() {
     }
   }
 
+  const handleApprove = async (id: string) => {
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('open_mics')
+      .update({ is_active: true })
+      .eq('id', id)
+
+    if (!error) {
+      await loadOpenMics()
+    } else {
+      console.error('Approve error:', error)
+      alert('Could not approve this listing. Check that your account has admin access.')
+    }
+  }
+
   const handleCSVImport = () => {
     try {
       const lines = csvData.trim().split('\n')
@@ -337,14 +355,21 @@ export default function AdminOpenMicsPage() {
     }
   }
 
+  const pendingCount = openMics.filter((m) => !m.is_active).length
+
   // Filter open mics
-  const filteredOpenMics = openMics.filter(mic => {
-    const matchesSearch = mic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         mic.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         mic.address.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredOpenMics = openMics.filter((mic) => {
+    const matchesSearch =
+      mic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mic.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mic.address.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesState = !filterState || mic.state === filterState
     const matchesDay = filterDay === '' || mic.day_of_week === filterDay
-    return matchesSearch && matchesState && matchesDay
+    const matchesStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'live' && mic.is_active) ||
+      (statusFilter === 'pending' && !mic.is_active)
+    return matchesSearch && matchesState && matchesDay && matchesStatus
   })
 
   return (
@@ -359,6 +384,14 @@ export default function AdminOpenMicsPage() {
             </h1>
             <p className="text-[#A0A0A0] mt-1">
               Manage open mic listings • {openMics.length} total
+              {pendingCount > 0 ? (
+                <span className="text-amber-200/90"> • {pendingCount} pending review</span>
+              ) : null}
+            </p>
+            <p className="text-xs text-[#787878] mt-2 max-w-xl">
+              Inviting another moderator later is done in Supabase: set{' '}
+              <code className="text-[#A0A0A0]">profiles.role</code> to{' '}
+              <code className="text-[#A0A0A0]">admin</code> for their user id.
             </p>
           </div>
           <div className="flex gap-3">
@@ -381,7 +414,29 @@ export default function AdminOpenMicsPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-[#1A0033]/40 backdrop-blur-xl border border-[#7B2FF7]/20 rounded-2xl p-6 mb-8">
+        <div className="bg-[#1A0033]/40 backdrop-blur-xl border border-[#7B2FF7]/20 rounded-2xl p-6 mb-8 space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                { id: 'all' as const, label: 'All' },
+                { id: 'live' as const, label: 'Live on map' },
+                { id: 'pending' as const, label: `Pending (${pendingCount})` },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setStatusFilter(tab.id)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  statusFilter === tab.id
+                    ? 'bg-[#7B2FF7]/30 text-white border border-[#7B2FF7]/50'
+                    : 'bg-[#1A0033]/50 text-[#A0A0A0] border border-[#7B2FF7]/20 hover:border-[#7B2FF7]/40'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
               <div className="relative">
@@ -482,25 +537,42 @@ export default function AdminOpenMicsPage() {
                         </span>
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`px-3 py-1 rounded-full text-sm ${
-                          mic.is_active 
-                            ? 'bg-[#00F5D4]/20 text-[#00F5D4]' 
-                            : 'bg-[#FF6B6B]/20 text-[#FF6B6B]'
-                        }`}>
-                          {mic.is_active ? 'Active' : 'Inactive'}
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            mic.is_active
+                              ? 'bg-[#00F5D4]/20 text-[#00F5D4]'
+                              : 'bg-amber-500/15 text-amber-200/95'
+                          }`}
+                        >
+                          {mic.is_active ? 'Live' : 'Pending review'}
                         </span>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
+                          {!mic.is_active && (
+                            <button
+                              type="button"
+                              onClick={() => handleApprove(mic.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-[#00F5D4] bg-[#00F5D4]/15 hover:bg-[#00F5D4]/25 rounded-lg transition-colors"
+                              title="Approve — show on map"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              Approve
+                            </button>
+                          )}
                           <button
+                            type="button"
                             onClick={() => handleEdit(mic)}
                             className="p-2 text-[#A0A0A0] hover:text-[#7B2FF7] hover:bg-[#7B2FF7]/10 rounded-lg transition-colors"
+                            title="Edit"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
+                            type="button"
                             onClick={() => handleDelete(mic.id)}
                             className="p-2 text-[#A0A0A0] hover:text-[#FF6B6B] hover:bg-[#FF6B6B]/10 rounded-lg transition-colors"
+                            title={mic.is_active ? 'Delete' : 'Reject — remove submission'}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

@@ -108,7 +108,7 @@ export default function SubmitOpenMicPage() {
           drink_minimum: formData.drink_minimum,
           parking_info: formData.parking_info || null,
           notes: `Submitted by: ${formData.submitter_name} (${formData.submitter_email}) - ${formData.submitter_role}\nWebsite: ${formData.venue_website}\n\n${formData.notes}`,
-          is_active: true, // Could set to false for review workflow
+          is_active: false,
         }])
 
       if (insertError) throw insertError
@@ -133,10 +133,14 @@ export default function SubmitOpenMicPage() {
                 <CheckCircle className="w-10 h-10 text-[#00F5D4]" />
               </div>
               <h1 className="text-3xl font-bold text-white mb-4">
-                Thank You! 🎤
+                Thank you
               </h1>
-              <p className="text-[#A0A0A0] text-lg mb-8">
-                Your open mic submission has been received. We&apos;ll review it and add it to the map shortly.
+              <p className="text-[#A0A0A0] text-lg mb-3">
+                Your open mic is in our review queue. When a moderator approves it, it will appear on the public map—usually
+                within a few days. We may reach out if we need a detail clarified.
+              </p>
+              <p className="text-[#787878] text-sm mb-8">
+                Until then it won&apos;t show in search or counts; that keeps the map accurate for everyone.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
@@ -203,8 +207,46 @@ export default function SubmitOpenMicPage() {
             </p>
           </div>
 
+          <div className="grid gap-4 mb-8">
+            <section
+              id="start-host"
+              className="rounded-2xl border border-[#00F5D4]/30 bg-[#00F5D4]/[0.07] p-5 text-left scroll-mt-28"
+              aria-labelledby="start-host-heading"
+            >
+              <h2 id="start-host-heading" className="text-base font-semibold text-white mb-2">
+                Starting or hosting an open mic?
+              </h2>
+              <p className="text-[#A0A0A0] text-sm leading-relaxed">
+                Use the form below—under &quot;How are you connected to this open mic?&quot; choose{' '}
+                <span className="text-[#C8C8C8]">I host this open mic</span> or{' '}
+                <span className="text-[#C8C8C8]">I work at/own the venue</span> so we can verify faster.
+              </p>
+            </section>
+
+            <section
+              id="listing-changes"
+              className="rounded-2xl border border-[#F72585]/30 bg-[#F72585]/[0.07] p-5 text-left scroll-mt-28"
+              aria-labelledby="listing-changes-heading"
+            >
+              <h2 id="listing-changes-heading" className="text-base font-semibold text-white mb-2">
+                Cancel, pause, or correct a listing?
+              </h2>
+              <p className="text-[#A0A0A0] text-sm leading-relaxed">
+                Email{' '}
+                <a
+                  href="mailto:support@comedymap.com?subject=Open%20mic%20listing%20change"
+                  className="text-[#F72585] hover:underline font-medium"
+                >
+                  support@comedymap.com
+                </a>{' '}
+                with the venue name and city, or use this form and explain what changed in the notes—we process updates
+                regularly.
+              </p>
+            </section>
+          </div>
+
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form id="open-mic-form" onSubmit={handleSubmit} className="space-y-8 scroll-mt-28">
             {error && (
               <div className="p-4 rounded-xl bg-[#FF6B6B]/10 border border-[#FF6B6B]/30 text-[#FF6B6B]">
                 {error}

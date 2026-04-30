@@ -19,6 +19,11 @@ function norm(s: string | null | undefined): string | null {
   return t.length ? t : null
 }
 
+/** True when `profiles.role` is the app moderator role (case-insensitive). */
+export function isAdminProfileRole(role: string | null | undefined): boolean {
+  return norm(role) === 'admin'
+}
+
 /** Read role from Supabase user (tries a few keys; case handled in resolve). */
 export function getRoleFromAuthUser(user: {
   user_metadata?: Record<string, unknown> | null

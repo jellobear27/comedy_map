@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Search, MapPin, Mic, ArrowRight, Plus } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { Search, MapPin, Mic, ArrowRight } from 'lucide-react'
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Input from '@/components/ui/Input'
@@ -29,22 +29,60 @@ export default function HomeMicFinder() {
   const [mics, setMics] = useState<OpenMicRow[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
+  const [fetchError, setFetchError] = useState<'unconfigured' | 'query' | null>(null)
+  const [queryErrorMessage, setQueryErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setFetchError('unconfigured')
+      setQueryErrorMessage(null)
+      setMics([])
+      setLoading(false)
+      return
+    }
+
+    const supabase = createClient()
+
     const load = async () => {
-      const supabase = createClient()
+      setFetchError(null)
+      setQueryErrorMessage(null)
       const { data, error } = await supabase
         .from('open_mics')
-        .select('id,name,venue_name,address,city,state,day_of_week,start_time,is_active')
+        .select('id,name,address,city,state,day_of_week,start_time,is_active')
         .eq('is_active', true)
         .order('day_of_week', { ascending: true })
 
-      if (!error && data) {
-        setMics(data as OpenMicRow[])
+      if (error) {
+        setFetchError('query')
+        setQueryErrorMessage(error.message)
+        setMics([])
+      } else {
+        setMics((data as OpenMicRow[]) ?? [])
       }
       setLoading(false)
     }
     load()
+
+    const channel = supabase
+      .channel('home_open_mics')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'open_mics' },
+        () => {
+          void load()
+        }
+      )
+      .subscribe()
+
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void load()
+    }
+    document.addEventListener('visibilitychange', onVis)
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVis)
+      void supabase.removeChannel(channel)
+    }
   }, [])
 
   const stats = useMemo(() => {
@@ -78,27 +116,35 @@ export default function HomeMicFinder() {
 
   return (
     <div id="mic-search" className="w-full max-w-2xl mx-auto space-y-5">
-      {!loading && (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-          <p className="text-sm text-[#A0A0A0]">
-            <span className="text-white font-semibold">{stats.listings}</span> open mic
-            {stats.listings === 1 ? '' : 's'} ·{' '}
-            <span className="text-white font-semibold">{stats.cities}</span>{' '}
-            {stats.cities === 1 ? 'city' : 'cities'} ·{' '}
-            <span className="text-white font-semibold">{stats.states}</span>{' '}
-            {stats.states === 1 ? 'state' : 'states'}
-            <span className="text-[#787878] hidden sm:inline"> — listings grow when comics add them.</span>
-          </p>
-          {FEATURES.submitOpenMic && (
-            <Link
-              href="/submit-open-mic"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-[#7B2FF7] hover:text-[#F72585] transition-colors shrink-0"
-            >
-              <Plus className="w-4 h-4" aria-hidden />
-              Submit a mic
-            </Link>
-          )}
-        </div>
+      {!loading && !fetchError && (
+        <p className="text-sm text-[#A0A0A0]">
+          <span className="text-white font-semibold">{stats.listings}</span> open mic
+          {stats.listings === 1 ? '' : 's'} ·{' '}
+          <span className="text-white font-semibold">{stats.cities}</span>{' '}
+          {stats.cities === 1 ? 'city' : 'cities'} ·{' '}
+          <span className="text-white font-semibold">{stats.states}</span>{' '}
+          {stats.states === 1 ? 'state' : 'states'}
+          <span className="text-[#787878] hidden sm:inline"> — live data</span>
+        </p>
+      )}
+      {!loading && fetchError === 'unconfigured' && (
+        <p className="text-sm text-amber-200/90 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+          Live listings aren&apos;t connected in this environment. Add{' '}
+          <code className="text-xs text-amber-100/90">NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
+          <code className="text-xs text-amber-100/90">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to{' '}
+          <code className="text-xs text-amber-100/90">.env.local</code>, then restart{' '}
+          <code className="text-xs text-amber-100/90">npm run dev</code>.
+        </p>
+      )}
+      {!loading && fetchError === 'query' && (
+        <p className="text-sm text-red-300/95 rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3">
+          Couldn&apos;t load open mics: {queryErrorMessage ?? 'Unknown error'}
+          <span className="block mt-2 text-xs text-red-200/70">
+            If the error says a column is missing, open the Supabase SQL Editor and run the statements in{' '}
+            <code className="text-red-100/80">supabase/migrations/001_add_open_mic_fields.sql</code> (safe to re-run). Also
+            confirm RLS allows public read on active mics and your anon key is for this project.
+          </span>
+        </p>
       )}
 
       <div className="flex flex-col sm:flex-row gap-3 sm:items-stretch">
@@ -111,7 +157,7 @@ export default function HomeMicFinder() {
               if (e.key === 'Enter') router.push(searchHref)
             }}
             icon={<Search className="w-5 h-5" />}
-            aria-label="Find open mics near you"
+            aria-label="Find open mics anywhere in the United States"
           />
         </div>
         <Button
@@ -120,7 +166,7 @@ export default function HomeMicFinder() {
           className="w-full sm:w-auto sm:self-stretch min-h-[48px] px-8"
           onClick={() => router.push(searchHref)}
         >
-          Find open mics near you
+          Find open mics in the U.S.
           <ArrowRight className="w-5 h-5 ml-2" />
         </Button>
       </div>
@@ -144,11 +190,27 @@ export default function HomeMicFinder() {
         )}
 
         {!loading && previewRows.length === 0 && (
-          <p className="text-[#A0A0A0] text-sm py-2">
-            {query.trim()
-              ? 'No listings match that search yet—try another city or browse all mics.'
-              : 'No active listings yet. Be the first to add your open mic.'}
-          </p>
+          <div className="space-y-4 py-1">
+            <p className="text-[#A0A0A0] text-sm">
+              {fetchError === 'unconfigured'
+                ? 'This preview fills in once the app is pointed at your Supabase project (see the note above).'
+                : fetchError === 'query'
+                  ? 'Fix the load issue above to show listings in this preview.'
+                  : query.trim()
+                    ? 'No listings match that search—try another keyword or browse all open mics.'
+                    : 'Nothing to show in this preview box yet—open the full directory or submit a mic we\'re missing.'}
+            </p>
+            {FEATURES.submitOpenMic && fetchError !== 'unconfigured' && (
+              <p className="text-sm">
+                <Link
+                  href="/submit-open-mic#open-mic-form"
+                  className="font-medium text-[#00F5D4] hover:text-[#33f7de] underline underline-offset-2"
+                >
+                  Add or fix a listing
+                </Link>
+              </p>
+            )}
+          </div>
         )}
 
         {!loading &&
@@ -180,7 +242,7 @@ export default function HomeMicFinder() {
           ))}
 
         {!loading && mics.length > 0 && (
-          <div className="pt-4 mt-2 border-t border-[#7B2FF7]/20">
+          <div className="pt-4 mt-2 border-t border-[#7B2FF7]/20 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Link
               href={searchHref}
               className="inline-flex items-center text-sm font-medium text-[#7B2FF7] hover:text-[#F72585] transition-colors"
@@ -188,6 +250,14 @@ export default function HomeMicFinder() {
               See all results
               <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
+            {FEATURES.submitOpenMic && (
+              <Link
+                href="/submit-open-mic#listing-changes"
+                className="text-sm font-medium text-[#787878] hover:text-[#A0A0A0] transition-colors"
+              >
+                Wrong or outdated? Report a change
+              </Link>
+            )}
           </div>
         )}
       </Card>

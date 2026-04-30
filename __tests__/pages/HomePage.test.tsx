@@ -5,68 +5,73 @@ describe('HomePage', () => {
   it('renders the main headline', () => {
     render(<HomePage />)
     const h1 = screen.getByRole('heading', { level: 1 })
-    expect(h1).toHaveTextContent('Designed for')
-    expect(h1).toHaveTextContent('comedians, venues, and superfans.')
+    expect(h1).toHaveTextContent('Find Open Mics.')
+    expect(h1).toHaveTextContent('Get Stage Time.')
   })
 
-  it('renders the subheadline', () => {
+  it('renders the hero subcopy', () => {
     render(<HomePage />)
     expect(
-      screen.getByText(/Find mics, connect with fellow comedians, fill your venue, and never miss a show/)
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(/Network with fellow comics, book better rooms, and unlock bigger opportunities/)
+      screen.getByText(/The nationwide open mic finder for the United States/i)
     ).toBeInTheDocument()
   })
 
-  it('links Roast Me to community roast page', () => {
+  it('mentions Roast Me in the community blurb', () => {
     render(<HomePage />)
-    const roast = screen.getByRole('link', { name: 'Roast Me' })
-    expect(roast).toHaveAttribute('href', '/community/roast-me')
+    expect(screen.getByText(/Roast Me/i)).toBeInTheDocument()
   })
 
-  it('renders the badge', () => {
+  it('renders the hero badge strip', () => {
     render(<HomePage />)
-    expect(screen.getByText('Mics · Venues · Roast · Shows')).toBeInTheDocument()
+    expect(screen.getByText(/Built for U\.S\. comedians/i)).toBeInTheDocument()
   })
 
-  it('renders CTA buttons', () => {
+  it('renders primary CTAs for listings and submissions', () => {
     render(<HomePage />)
-    expect(screen.getByText('Start Your Journey')).toBeInTheDocument()
-    expect(screen.getAllByText('Find Open Mics').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByRole('link', { name: /Find open mics in the U\.S\./i })).toHaveAttribute(
+      'href',
+      '/open-mics'
+    )
+    expect(screen.getByRole('link', { name: /Submit or update a mic/i })).toHaveAttribute(
+      'href',
+      '/submit-open-mic'
+    )
   })
 
-  it('CTA buttons have correct links', () => {
+  it('links comedian signup', () => {
     render(<HomePage />)
-
-    const signupLink = screen.getByRole('link', { name: /Start Your Journey/i })
-    const openMicsLink = screen.getByRole('link', { name: /Find Open Mics/i })
-
-    expect(signupLink).toHaveAttribute('href', '/signup')
-    expect(openMicsLink).toHaveAttribute('href', '/open-mics')
+    const comedianLinks = screen.getAllByRole('link', {
+      name: /Create a (free )?comedian account/i,
+    })
+    expect(comedianLinks.length).toBeGreaterThanOrEqual(1)
+    comedianLinks.forEach((link) => {
+      expect(link).toHaveAttribute('href', '/signup?role=comedian')
+    })
   })
 
-  it('renders feature sections', () => {
+  it('renders venue section', () => {
     render(<HomePage />)
-
-    expect(screen.getAllByText('Find Open Mics').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText('Learn & Grow')).toBeInTheDocument()
-    expect(screen.getByText('Join Community')).toBeInTheDocument()
-    expect(screen.getByText('Plan Your Tour')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Fill the room/i })).toBeInTheDocument()
   })
 
-  it('renders stats section', () => {
+  it('renders mission section copy', () => {
     render(<HomePage />)
-
-    expect(screen.getByText('2,500+')).toBeInTheDocument()
-    expect(screen.getByText('Open Mics Listed')).toBeInTheDocument()
-    expect(screen.getByText('50')).toBeInTheDocument()
-    expect(screen.getByText('States Covered')).toBeInTheDocument()
+    expect(screen.getByText(/Why we exist/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Nova Acta is a nationwide map kept accurate by comics and venues/i)
+    ).toBeInTheDocument()
   })
 
-  it('renders testimonials', () => {
+  it('renders honest proof placeholder instead of fake testimonials', () => {
     render(<HomePage />)
+    expect(screen.getByText(/We don't use fabricated testimonials/i)).toBeInTheDocument()
+  })
 
-    expect(screen.getByText(/NovaActa helped me find 15 open mics/)).toBeInTheDocument()
+  it('links submit flow from hero when submit feature is enabled', () => {
+    render(<HomePage />)
+    expect(screen.getByRole('link', { name: /Submit an open mic/i })).toHaveAttribute(
+      'href',
+      '/submit-open-mic#open-mic-form'
+    )
   })
 })

@@ -1,15 +1,5 @@
 import Link from 'next/link'
-import {
-  Mic,
-  MapPin,
-  ArrowRight,
-  Zap,
-  TrendingUp,
-  Heart,
-  Search,
-  Star,
-  BookOpen,
-} from 'lucide-react'
+import { MapPin, ArrowRight, Zap, TrendingUp, Heart, Star, BookOpen } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
@@ -17,31 +7,8 @@ import Fireflies from '@/components/ui/Fireflies'
 import HomeMicFinder from '@/components/home/HomeMicFinder'
 import { FEATURES } from '@/config/features'
 
-const howItWorks = [
-  {
-    icon: Search,
-    title: 'Find a mic',
-    description:
-      'Search by city, ZIP, venue, or mic name—one database you can actually filter, instead of doom-scrolling venue Facebook pages and wrestling apps that only really work in one region.',
-    gradient: 'from-[#7B2FF7] to-[#F72585]',
-  },
-  {
-    icon: Mic,
-    title: 'Show up prepared',
-    description: 'See day, time, and location so you walk in knowing how the room runs.',
-    gradient: 'from-[#F72585] to-[#FF6B6B]',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Grow',
-    description:
-      'Connect with hosts and comics via Community when you\'re ready—your stage comes first.',
-    gradient: 'from-[#00F5D4] to-[#7B2FF7]',
-  },
-] as const
-
 const missionShort =
-  'Most comedians still piece stage time together from venue Facebook pages, uneven group feeds, and signup sites that cover one state but fall apart when you\'re on the road. Nova Acta is built to replace that scavenger hunt—with real open mic listings first, then venues and community behind it—so comics can find stage time, grow an audience, and never miss a show.'
+  'Most comedians still piece stage time together from venue Facebook pages, uneven group feeds, and signup sites that cover one state but fall apart when you\'re on the road. Nova Acta is a nationwide map kept accurate by comics and venues who submit and refresh listings—so everyone can find stage time, grow an audience, and never miss a show.'
 
 export default function HomePage() {
   return (
@@ -63,7 +30,7 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7B2FF7]/10 border border-[#7B2FF7]/30 mb-6 animate-float">
               <Zap className="w-4 h-4 text-[#7B2FF7]" aria-hidden />
               <span className="text-sm font-medium text-[#7B2FF7]">
-                Built for comedians · Open mics nationwide
+                Built for U.S. comedians · Open mics across all 50 states
               </span>
             </div>
 
@@ -71,17 +38,45 @@ export default function HomePage() {
               <span className="text-white">Find Open Mics.</span>{' '}
               <span className="bg-gradient-to-r from-[#7B2FF7] via-[#F72585] to-[#FF6B6B] bg-clip-text text-transparent">
                 Get Stage Time.
-              </span>{' '}
-              <span className="text-white block sm:inline">Grow Your Comedy Career.</span>
+              </span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-[#C8C8C8] leading-relaxed max-w-2xl mx-auto mb-3">
-              One place for comedians to discover open mics, see when rooms run, and get on stage—without the usual runaround
-              through venue Facebook pages, buried group posts, and clunky signup flows that barely leave your home state.
+            <p className={`text-lg sm:text-xl text-[#C8C8C8] leading-relaxed max-w-2xl mx-auto ${FEATURES.submitOpenMic ? 'mb-4' : 'mb-10'}`}>
+              The nationwide open mic finder for the United States—get on stage without the usual runaround through venue
+              Facebook pages, buried group posts, and regional signup tools that fall apart when you cross state lines.
             </p>
-            <p className="text-sm text-[#787878] max-w-2xl mx-auto mb-8">
-              We&apos;re focused on listings and discovery first; paid bookings and heavier venue workflows come next.
-            </p>
+
+            {FEATURES.submitOpenMic && (
+              <div className="max-w-2xl mx-auto mb-10 space-y-4">
+                <p className="text-sm sm:text-base text-[#A0A0A0] leading-relaxed">
+                  We don&apos;t run a central booking desk—the map stays useful when comics and venues add, host, and
+                  correct listings. That&apos;s the loop.
+                </p>
+                <nav
+                  className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-3 text-sm sm:text-base"
+                  aria-label="Listings: add, host, or update"
+                >
+                  <Link
+                    href="/submit-open-mic#open-mic-form"
+                    className="inline-flex items-center justify-center rounded-xl border border-[#00F5D4]/40 bg-[#00F5D4]/10 px-4 py-2.5 font-semibold text-[#00F5D4] hover:bg-[#00F5D4]/15 transition-colors"
+                  >
+                    Submit an open mic
+                  </Link>
+                  <Link
+                    href="/submit-open-mic#start-host"
+                    className="inline-flex items-center justify-center rounded-xl border border-[#7B2FF7]/35 bg-[#7B2FF7]/10 px-4 py-2.5 font-semibold text-[#C8C8C8] hover:border-[#7B2FF7]/55 hover:text-white transition-colors"
+                  >
+                    Start or host an open mic
+                  </Link>
+                  <Link
+                    href="/submit-open-mic#listing-changes"
+                    className="inline-flex items-center justify-center rounded-xl border border-[#F72585]/35 bg-[#F72585]/10 px-4 py-2.5 font-semibold text-[#F72585]/95 hover:bg-[#F72585]/15 transition-colors"
+                  >
+                    Cancel or update a listing
+                  </Link>
+                </nav>
+              </div>
+            )}
           </div>
 
           <HomeMicFinder />
@@ -97,38 +92,6 @@ export default function HomePage() {
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce opacity-70">
           <div className="w-6 h-10 border-2 border-[#7B2FF7]/40 rounded-full flex justify-center pt-2">
             <div className="w-1 h-2 bg-[#7B2FF7]/80 rounded-full" />
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="relative py-24 lg:py-28 border-t border-[#7B2FF7]/15" aria-labelledby="how-heading">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <Badge variant="info" className="mb-4">
-              How it works
-            </Badge>
-            <h2 id="how-heading" className="text-3xl sm:text-4xl font-bold text-white mb-3">
-              Stage time in three steps
-            </h2>
-            <p className="text-[#A0A0A0] max-w-xl mx-auto">
-              A simple tool workflow—not an everything-app pitch.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {howItWorks.map((step, index) => (
-              <Card key={step.title} variant="glass" hover={false} className="border border-[#7B2FF7]/20 relative">
-                <div className="absolute -top-3 -left-3 w-9 h-9 rounded-full bg-[#1A0033] border border-[#7B2FF7]/40 flex items-center justify-center text-sm font-bold text-[#F72585]">
-                  {index + 1}
-                </div>
-                <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${step.gradient} mb-4 mt-2`}>
-                  <step.icon className="w-6 h-6 text-white" aria-hidden />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">{step.title}</h3>
-                <p className="text-[#A0A0A0]">{step.description}</p>
-              </Card>
-            ))}
           </div>
         </div>
       </section>
@@ -149,8 +112,8 @@ export default function HomePage() {
                   </span>
                 </h2>
                 <p className="text-[#A0A0A0] text-lg mb-6 leading-relaxed">
-                  Venues use Nova Acta alongside comics: list your mic, browse hosts, and reach people who already search here
-                  for stage time.
+                  Submit and refresh your mic like everyone else on the map—then browse hosts and reach comics already
+                  searching coast to coast for stage time.
                 </p>
                 <Link href="/for-venues">
                   <Button variant="secondary">
@@ -311,8 +274,8 @@ export default function HomePage() {
               performs.
             </p>
             <p className="text-sm text-[#787878] mb-6">
-              Until then, the numbers above come straight from our database. Help us grow listings or say hi in the
-              community.
+              Until then, the numbers above come straight from our database. Help us grow coverage across the country or say
+              hi in the community.
             </p>
             <div className="flex flex-wrap gap-4">
               {FEATURES.submitOpenMic && (
@@ -347,21 +310,29 @@ export default function HomePage() {
             </span>
           </h2>
           <p className="text-lg text-[#A0A0A0] mb-10 max-w-xl mx-auto">
-            Start with open mics—everything else on Nova Acta backs the same career arc.
+            Search the directory—or help keep it current by submitting and updating mics.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/open-mics">
               <Button size="lg" className="animate-glow">
-                Find open mics near you
+                Find open mics in the U.S.
                 <MapPin className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <Link href="/signup?role=comedian">
-              <Button variant="secondary" size="lg">
-                Create comedian account
-              </Button>
-            </Link>
+            {FEATURES.submitOpenMic && (
+              <Link href="/submit-open-mic">
+                <Button variant="secondary" size="lg">
+                  Submit or update a mic
+                </Button>
+              </Link>
+            )}
           </div>
+          <p className="mt-8 text-sm text-[#787878]">
+            Want a saved profile?{' '}
+            <Link href="/signup?role=comedian" className="text-[#7B2FF7] hover:text-[#F72585] font-medium underline underline-offset-2">
+              Create a comedian account
+            </Link>
+          </p>
         </div>
       </section>
     </div>

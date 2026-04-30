@@ -206,7 +206,7 @@ export default function OpenMicsPage() {
               </span>
             </h1>
             <p className="text-lg text-[#A0A0A0] max-w-2xl mx-auto">
-              Discover open mics in your area or plan your comedy tour with our comprehensive database.
+              Search and filter open mics across all 50 states—whether you&apos;re home, touring the country, or planning a run.
             </p>
           </div>
 

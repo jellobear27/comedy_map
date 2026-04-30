@@ -15,6 +15,7 @@ import {
   getAuthRoleHintFromClient,
   resolveAccountRoleWithHints,
   shouldPersistResolvedRole,
+  isAdminProfileRole,
   type AccountRole,
 } from '@/lib/account-role'
 import ComedianPokemonCard from '@/components/comedian/ComedianPokemonCard'
@@ -71,6 +72,7 @@ export default function DashboardPage() {
   const [superfanProfile, setSuperfanProfile] = useState<SuperfanProfileRow | null>(null)
   const [venueProfile, setVenueProfile] = useState<VenueProfileRow | null>(null)
   const [accountRole, setAccountRole] = useState<AccountRole>('comedian')
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     loadUserData()
@@ -111,6 +113,14 @@ export default function DashboardPage() {
           .update({ role: resolvedRole, updated_at: new Date().toISOString() })
           .eq('id', user.id)
       }
+
+      const { data: roleAfter } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      setIsAdmin(isAdminProfileRole(roleAfter?.role ?? profileData?.role))
 
       setAccountRole(resolvedRole)
 
@@ -306,6 +316,7 @@ export default function DashboardPage() {
           <section className="mb-10 max-w-5xl mx-auto">
             <ComedianPokemonCard
               mode="dashboard"
+              isNovaAdmin={isAdmin}
               profile={{
                 full_name: profile.full_name,
                 bio: profile.bio,

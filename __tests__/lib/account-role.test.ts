@@ -4,6 +4,7 @@ import {
   shouldPersistResolvedRole,
   shouldSyncProfileRoleFromMetadata,
   getRoleFromAuthUser,
+  isAdminProfileRole,
 } from '@/lib/account-role'
 
 describe('resolveAccountRole', () => {
@@ -103,5 +104,19 @@ describe('shouldSyncProfileRoleFromMetadata', () => {
 
   it('is false without metadata', () => {
     expect(shouldSyncProfileRoleFromMetadata('user', undefined)).toBe(false)
+  })
+})
+
+describe('isAdminProfileRole', () => {
+  it('is true for admin with any casing', () => {
+    expect(isAdminProfileRole('admin')).toBe(true)
+    expect(isAdminProfileRole('Admin')).toBe(true)
+    expect(isAdminProfileRole(' ADMIN ')).toBe(true)
+  })
+
+  it('is false for other roles', () => {
+    expect(isAdminProfileRole('comedian')).toBe(false)
+    expect(isAdminProfileRole(null)).toBe(false)
+    expect(isAdminProfileRole(undefined)).toBe(false)
   })
 })

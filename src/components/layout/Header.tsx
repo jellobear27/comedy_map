@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Menu, X, User, LogOut, Sparkles } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Menu, X, User, LogOut, Sparkles, Shield } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Logo from '@/components/ui/Logo'
 import { FEATURES } from '@/config/features'
+import { createClient } from '@/lib/supabase/client'
+import { isAdminProfileRole } from '@/lib/account-role'
 
 // Define all nav links with their feature flag
 const allNavLinks = [
@@ -33,11 +35,82 @@ interface HeaderProps {
   user?: { id: string; email: string; full_name?: string } | null
 }
 
-export default function Header({ user }: HeaderProps) {
+interface SessionDisplay {
+  email: string
+  full_name: string | null
+}
+
+export default function Header({ user: userFromProps }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showOpenMicsAnimation, setShowOpenMicsAnimation] = useState(false)
   const [animationPhase, setAnimationPhase] = useState<'initial' | 'explode' | 'settle'>('initial')
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [authSession, setAuthSession] = useState<SessionDisplay | null>(null)
   const pathname = usePathname()
+  const router = useRouter()
+
+  const syncAuth = useCallback(async () => {
+    const supabase = createClient()
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser()
+    if (!authUser) {
+      setAuthSession(null)
+      setIsAdmin(false)
+      return
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, full_name')
+      .eq('id', authUser.id)
+      .maybeSingle()
+    setIsAdmin(isAdminProfileRole(profile?.role))
+    setAuthSession({
+      email: authUser.email ?? '',
+      full_name: profile?.full_name ?? null,
+    })
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      await syncAuth()
+      if (cancelled) return
+    }
+    void run()
+    const supabase = createClient()
+    const subscribe =
+      typeof supabase.auth.onAuthStateChange === 'function'
+        ? supabase.auth.onAuthStateChange(() => {
+            void syncAuth()
+          })
+        : null
+    return () => {
+      cancelled = true
+      subscribe?.data.subscription.unsubscribe()
+    }
+  }, [syncAuth])
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    setIsMobileMenuOpen(false)
+    await supabase.auth.signOut()
+    setAuthSession(null)
+    setIsAdmin(false)
+    router.push('/')
+    router.refresh()
+  }
+
+  const user =
+    userFromProps != null
+      ? userFromProps
+      : authSession
+        ? {
+            id: '',
+            email: authSession.email,
+            full_name: authSession.full_name ?? undefined,
+          }
+        : null
   
   // Theatrical animation for Open Mics on landing page
   useEffect(() => {
@@ -87,6 +160,15 @@ export default function Header({ user }: HeaderProps) {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-5 xl:gap-6">
+            {isAdmin && (
+              <Link
+                href="/admin/open-mics"
+                className="text-sm font-semibold text-[#FFB627] hover:text-white transition-colors flex items-center gap-1.5"
+              >
+                <Shield className="w-4 h-4 shrink-0" aria-hidden />
+                Moderate mics
+              </Link>
+            )}
             {navLinks.map((link) => {
               const isOpenMics = link.href === '/open-mics'
               const isTheatrical = isOpenMics && showOpenMicsAnimation && pathname === '/'
@@ -149,7 +231,7 @@ export default function Header({ user }: HeaderProps) {
                   <User className="w-4 h-4" />
                   <span>{user.full_name || user.email}</span>
                 </Link>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" type="button" onClick={() => void handleSignOut()}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </Button>
@@ -185,6 +267,15 @@ export default function Header({ user }: HeaderProps) {
         {isMobileMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-[#050505]/95 backdrop-blur-xl border-b border-[#7B2FF7]/10 p-4">
             <div className="flex flex-col gap-4">
+              {isAdmin && (
+                <Link
+                  href="/admin/open-mics"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-lg font-semibold py-3 px-3 rounded-xl text-[#FFB627] border border-[#FFB627]/35 bg-[#FFB627]/10"
+                >
+                  Moderate open mics
+                </Link>
+              )}
               {navLinks.map((link) => {
                 const emphasis = isEmphasisNavLink(link.href)
                 const active = isNavLinkActive(link.href, pathname)
@@ -216,7 +307,14 @@ export default function Header({ user }: HeaderProps) {
                   <Link href="/dashboard" className="text-lg text-[#A0A0A0] py-2">
                     Dashboard
                   </Link>
-                  <Button variant="secondary" className="w-full">Sign Out</Button>
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    type="button"
+                    onClick={() => void handleSignOut()}
+                  >
+                    Sign Out
+                  </Button>
                 </>
               ) : (
                 <>

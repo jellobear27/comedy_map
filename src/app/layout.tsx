@@ -17,8 +17,18 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "NovaActa - Built for Comics. Backed by Community.",
-  description: "The ultimate platform for comedians to discover open mics, learn from courses, connect with the comedy community, and plan tours across the USA.",
-  keywords: ["comedy", "open mic", "stand-up", "comedian", "comedy courses", "comedy community", "NovaActa"],
+  description:
+    "NovaActa helps comedians across the United States find open mics nationwide—one USA-wide finder for stage time, plus community and (soon) courses and tours.",
+  keywords: [
+    "comedy",
+    "open mic",
+    "open mics USA",
+    "nationwide",
+    "stand-up",
+    "comedian",
+    "comedy community",
+    "NovaActa",
+  ],
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

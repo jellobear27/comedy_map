@@ -18,6 +18,14 @@ function normalizeSupabaseUrl(url: string): string {
   return url.replace(/\/+$/, '')
 }
 
+/** True when the browser client will use the real Supabase API (not the empty mock). */
+export function isSupabaseConfigured(): boolean {
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseUrl = rawUrl && isValidSupabaseUrl(rawUrl) ? normalizeSupabaseUrl(rawUrl) : rawUrl
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  return isValidSupabaseUrl(supabaseUrl) && !!supabaseAnonKey && !supabaseAnonKey.includes('your_')
+}
+
 export function createClient() {
   const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseUrl = rawUrl && isValidSupabaseUrl(rawUrl) ? normalizeSupabaseUrl(rawUrl) : rawUrl

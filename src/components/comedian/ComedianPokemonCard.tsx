@@ -10,6 +10,7 @@ import {
   Clock,
   Award,
   Mail,
+  Shield,
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 
@@ -42,6 +43,12 @@ export type ComedianPokemonCardProps = {
   profile: ComedianPokemonCardProfile
   comedian: ComedianPokemonCardData
   mode: Mode
+  /**
+   * Map & listings moderator (profiles.role = admin).
+   * Dashboard: private moderator tools on your card only.
+   * Public: small verified-style badge on your public card.
+   */
+  isNovaAdmin?: boolean
 }
 
 const ACCENT = ['#7B2FF7', '#F72585', '#00F5D4', '#FFB627'] as const
@@ -50,6 +57,7 @@ export default function ComedianPokemonCard({
   profile,
   comedian,
   mode,
+  isNovaAdmin = false,
 }: ComedianPokemonCardProps) {
   const comedyStyles = comedian.comedy_styles || []
   const performanceTypes = comedian.performance_types || []
@@ -80,13 +88,21 @@ export default function ComedianPokemonCard({
       <div className="absolute -inset-1 bg-gradient-to-r from-[#7B2FF7] via-[#F72585] via-[#00F5D4] to-[#7B2FF7] rounded-[2rem] opacity-75 blur-lg group-hover:opacity-100 transition-opacity duration-500 animate-gradient-x" />
 
       <div className="relative bg-gradient-to-br from-[#0D0016] via-[#1A0033] to-[#0D0016] rounded-[2rem] border border-[#7B2FF7]/30 overflow-hidden">
-        <div className="flex items-center gap-3 px-8 py-4 border-b border-[#7B2FF7]/20 bg-[#7B2FF7]/5">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#7B2FF7] to-[#F72585] flex items-center justify-center shrink-0">
-            <Mic className="w-5 h-5 text-white" />
+        <div className="flex flex-wrap items-center justify-between gap-3 px-8 py-4 border-b border-[#7B2FF7]/20 bg-[#7B2FF7]/5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#7B2FF7] to-[#F72585] flex items-center justify-center shrink-0">
+              <Mic className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-[#A0A0A0] font-medium uppercase tracking-wider text-sm">
+              Stand-Up Comedian
+            </span>
           </div>
-          <span className="text-[#A0A0A0] font-medium uppercase tracking-wider text-sm">
-            Stand-Up Comedian
-          </span>
+          {mode === 'public' && isNovaAdmin && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FFB627]/45 bg-[#FFB627]/12 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#FFB627] shadow-[0_0_20px_rgba(255,182,39,0.15)]">
+              <Shield className="w-3.5 h-3.5" aria-hidden />
+              Nova Acta admin
+            </span>
+          )}
         </div>
 
         <div className="p-8">
@@ -283,6 +299,31 @@ export default function ComedianPokemonCard({
             </div>
           </div>
         </div>
+
+        {mode === 'dashboard' && isNovaAdmin && (
+          <div className="px-8 py-5 border-b border-[#FFB627]/25 bg-gradient-to-r from-[#FFB627]/[0.09] via-[#1A0033] to-[#7B2FF7]/[0.08]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-[#FFB627] mb-1.5">
+                  Moderator — only you see this
+                </p>
+                <p className="text-sm text-[#C8C8C8] max-w-lg">
+                  Approve open mic submissions, fix listings, and keep the map trustworthy. This never appears on
+                  your public card.
+                </p>
+              </div>
+              <Link href="/admin/open-mics" className="shrink-0">
+                <Button
+                  variant="secondary"
+                  className="w-full sm:w-auto border-2 border-[#FFB627]/45 bg-[#FFB627]/10 text-[#FFB627] hover:bg-[#FFB627]/18 hover:border-[#FFB627]/70"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Open mic admin
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
 
         {mode === 'public' && isBookable && profile.email && (
           <div className="px-8 py-6 border-t border-[#7B2FF7]/20 bg-gradient-to-r from-[#7B2FF7]/10 via-[#F72585]/10 to-[#7B2FF7]/10">

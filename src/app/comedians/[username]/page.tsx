@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { isAdminProfileRole } from '@/lib/account-role'
 import { 
   Instagram, Youtube, Twitter, Globe, 
   Music, Play, Edit3
@@ -104,6 +105,7 @@ export default function ComedianProfilePage({ params }: PageProps) {
         <div className="max-w-5xl mx-auto">
           <ComedianPokemonCard
             mode="public"
+            isNovaAdmin={isAdminProfileRole(profile.role)}
             profile={{
               full_name: profile.full_name,
               bio: profile.bio,

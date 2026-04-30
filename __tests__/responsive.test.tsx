@@ -9,9 +9,13 @@ import { render, screen } from '@testing-library/react'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 
-// Mock usePathname
+// Mock App Router hooks used by Header
 jest.mock('next/navigation', () => ({
   usePathname: () => '/',
+  useRouter: () => ({
+    push: jest.fn(),
+    refresh: jest.fn(),
+  }),
 }))
 
 describe('Responsive Design', () => {
