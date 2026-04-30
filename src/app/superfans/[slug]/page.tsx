@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { isAdminProfileRole } from '@/lib/account-role'
 import SuperfanTrainerCard from '@/components/superfan/SuperfanTrainerCard'
 import { Loader2 } from 'lucide-react'
 
@@ -85,6 +86,7 @@ export default function SuperfanPublicPage({ params }: PageProps) {
         </div>
         <SuperfanTrainerCard
           mode="public"
+          isNovaAdmin={isAdminProfileRole(profile.role as string | undefined)}
           profile={{
             full_name: (profile.full_name as string) ?? null,
             bio: (profile.bio as string) ?? null,

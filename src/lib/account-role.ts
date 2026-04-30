@@ -81,19 +81,29 @@ export function resolveAccountRole(
 export function resolveAccountRoleWithHints(
   profileRole: string | null | undefined,
   metadataRole: string | null | undefined,
-  hints?: { hasSuperfanProfileRow?: boolean; hasVenueProfileRow?: boolean }
+  hints?: {
+    hasSuperfanProfileRow?: boolean
+    hasVenueProfileRow?: boolean
+    /** If true, do not infer "superfan" from a stray superfan_profiles row (comedian is primary). */
+    hasComedianProfileRow?: boolean
+  }
 ): AccountRole {
   const base = resolveAccountRole(profileRole, metadataRole)
   if (base !== 'comedian') return base
 
   const sf = hints?.hasSuperfanProfileRow
   const vn = hints?.hasVenueProfileRow
+  const comic = hints?.hasComedianProfileRow
 
-  if (sf && !vn) return 'superfan'
+  if (sf && !vn) {
+    if (comic) return 'comedian'
+    return 'superfan'
+  }
   if (vn && !sf) return 'venue'
   if (sf && vn) {
     const pr = norm(profileRole)
     if (pr === 'venue') return 'venue'
+    if (comic) return 'comedian'
     return 'superfan'
   }
   return 'comedian'

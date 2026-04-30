@@ -140,6 +140,7 @@ export default function ProfileEditPage() {
       const resolvedRole = resolveAccountRoleWithHints(profile?.role, authRoleHint, {
         hasSuperfanProfileRow: !!superfanProfile,
         hasVenueProfileRow: !!venueProfile,
+        hasComedianProfileRow: !!comedianProfile,
       })
 
       if (profile && shouldPersistResolvedRole(profile.role, resolvedRole)) {

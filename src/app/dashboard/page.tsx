@@ -112,6 +112,7 @@ export default function DashboardPage() {
       const resolvedRole = resolveAccountRoleWithHints(profileData?.role, authRoleHint, {
         hasSuperfanProfileRow: !!superfanData,
         hasVenueProfileRow: !!venueData,
+        hasComedianProfileRow: !!comedianData,
       })
 
       if (profileData && shouldPersistResolvedRole(profileData.role, resolvedRole)) {
@@ -128,6 +129,7 @@ export default function DashboardPage() {
           ...profileData,
           email: user.email || '',
         })
+        setIsAdmin(isAdminProfileRole(profileData.role))
       } else {
         // Create a basic profile from auth data
         setProfile({
@@ -210,7 +212,8 @@ export default function DashboardPage() {
     return false
   }
 
-  const showComedianHero = accountRole === 'comedian' && !!comedianProfile
+  /** Admins keep the comedian hero (and moderator strip) even when UI role resolves to superfan/venue. */
+  const showComedianHero = !!comedianProfile && (accountRole === 'comedian' || isAdmin)
   const showSuperfanHero = accountRole === 'superfan' && !!profile
   const showSuperfanDashboardHeader = showSuperfanHero
 
@@ -361,6 +364,7 @@ export default function DashboardPage() {
           <section className="mb-10 max-w-5xl mx-auto">
             <SuperfanTrainerCard
               mode="dashboard"
+              isNovaAdmin={isAdmin}
               profile={{
                 full_name: profile.full_name,
                 bio: profile.bio,

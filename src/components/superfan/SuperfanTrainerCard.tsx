@@ -10,6 +10,7 @@ import {
   Zap,
   Award,
   Instagram,
+  Shield,
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { SUPERFAN_SHOW_FREQUENCY } from '@/types'
@@ -43,6 +44,8 @@ export type SuperfanTrainerCardProps = {
   profile: SuperfanTrainerProfile
   superfan: SuperfanTrainerData
   mode: Mode
+  /** Map & listings moderator (profiles.role = admin). Same behavior as ComedianPokemonCard. */
+  isNovaAdmin?: boolean
   /** Public page: user id of the card owner for likes */
   likeTargetUserId?: string | null
   /** Path for post-login redirect, e.g. /superfans/jamie */
@@ -69,6 +72,7 @@ export default function SuperfanTrainerCard({
   profile,
   superfan,
   mode,
+  isNovaAdmin = false,
   likeTargetUserId,
   likeLoginRedirect,
 }: SuperfanTrainerCardProps) {
@@ -102,8 +106,15 @@ export default function SuperfanTrainerCard({
               Comedy Superfan
             </span>
           </div>
+          <div className="flex flex-wrap items-center justify-end gap-2 shrink-0">
+          {mode === 'public' && isNovaAdmin && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FFB627]/45 bg-[#FFB627]/12 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#FFB627] shadow-[0_0_20px_rgba(255,182,39,0.15)]">
+              <Shield className="w-3.5 h-3.5" aria-hidden />
+              Nova Acta admin
+            </span>
+          )}
           {mode === 'public' && likeTargetUserId && likeLoginRedirect && (
-            <div className="shrink-0 max-w-[min(100%,18rem)] sm:max-w-none">
+            <div className="max-w-[min(100%,18rem)] sm:max-w-none">
               <SuperfanLikeButton
                 likedUserId={likeTargetUserId}
                 initialCount={superfan.card_like_count ?? 0}
@@ -111,6 +122,7 @@ export default function SuperfanTrainerCard({
               />
             </div>
           )}
+          </div>
         </div>
 
         <div className="p-8">
@@ -343,6 +355,31 @@ export default function SuperfanTrainerCard({
             </div>
           </div>
         </div>
+
+        {mode === 'dashboard' && isNovaAdmin && (
+          <div className="px-8 py-5 border-b border-[#FFB627]/25 bg-gradient-to-r from-[#FFB627]/[0.09] via-[#1A0033] to-[#7B2FF7]/[0.08]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-[#FFB627] mb-1.5">
+                  Moderator — only you see this
+                </p>
+                <p className="text-sm text-[#C8C8C8] max-w-lg">
+                  Approve open mic submissions, fix listings, and keep the map trustworthy. This never appears on
+                  your public card.
+                </p>
+              </div>
+              <Link href="/admin/open-mics" className="shrink-0">
+                <Button
+                  variant="secondary"
+                  className="w-full sm:w-auto border-2 border-[#FFB627]/45 bg-[#FFB627]/10 text-[#FFB627] hover:bg-[#FFB627]/18 hover:border-[#FFB627]/70"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Open mic admin
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
 
         {mode === 'dashboard' && (
           <div className="px-8 py-6 border-t border-[#7B2FF7]/20 bg-gradient-to-r from-[#7B2FF7]/10 via-[#F72585]/10 to-[#7B2FF7]/10">

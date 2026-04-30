@@ -55,6 +55,23 @@ describe('resolveAccountRoleWithHints', () => {
       })
     ).toBe('venue')
   })
+
+  it('prefers comedian when comedian_profiles exists alongside superfan row', () => {
+    expect(
+      resolveAccountRoleWithHints('comedian', undefined, {
+        hasSuperfanProfileRow: true,
+        hasVenueProfileRow: false,
+        hasComedianProfileRow: true,
+      })
+    ).toBe('comedian')
+    expect(
+      resolveAccountRoleWithHints('user', undefined, {
+        hasSuperfanProfileRow: true,
+        hasVenueProfileRow: false,
+        hasComedianProfileRow: true,
+      })
+    ).toBe('comedian')
+  })
 })
 
 describe('getRoleFromAuthUser', () => {
