@@ -79,28 +79,35 @@ export default function DashboardPage() {
   }, [])
 
   const loadUserData = async () => {
+    let userId: string | null = null
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         router.push('/login')
         return
       }
 
+      userId = user.id
+
       const authRoleHint = await getAuthRoleHintFromClient(supabase)
 
       const [
-        { data: profileData },
+        { data: profileData, error: profileError },
         { data: comedianData },
         { data: superfanData },
         { data: venueData },
       ] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
         supabase.from('comedian_profiles').select('*').eq('id', user.id).maybeSingle(),
         supabase.from('superfan_profiles').select('*').eq('id', user.id).maybeSingle(),
         supabase.from('venue_profiles').select('*').eq('id', user.id).maybeSingle(),
       ])
+
+      if (profileError) {
+        console.error('Dashboard: profiles select error', profileError.message)
+      }
 
       const resolvedRole = resolveAccountRoleWithHints(profileData?.role, authRoleHint, {
         hasSuperfanProfileRow: !!superfanData,
@@ -113,14 +120,6 @@ export default function DashboardPage() {
           .update({ role: resolvedRole, updated_at: new Date().toISOString() })
           .eq('id', user.id)
       }
-
-      const { data: roleAfter } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      setIsAdmin(isAdminProfileRole(roleAfter?.role ?? profileData?.role))
 
       setAccountRole(resolvedRole)
 
@@ -156,6 +155,22 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error loading user data:', error)
     } finally {
+      if (userId) {
+        try {
+          const supabase = createClient()
+          const { data: roleRow, error: roleErr } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', userId)
+            .maybeSingle()
+          if (roleErr) {
+            console.error('Dashboard: role select error', roleErr.message)
+          }
+          setIsAdmin(isAdminProfileRole(roleRow?.role))
+        } catch {
+          /* ignore */
+        }
+      }
       setIsLoading(false)
     }
   }
