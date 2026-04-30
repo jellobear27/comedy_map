@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { 
   Mic, 
@@ -75,11 +76,40 @@ const initialFormData: SubmitFormData = {
   venue_website: '',
 }
 
-export default function SubmitOpenMicPage() {
+function SubmitOpenMicPageContent() {
+  const searchParams = useSearchParams()
+  const prefilledFromListingRef = useRef(false)
+
   const [formData, setFormData] = useState<SubmitFormData>(initialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (prefilledFromListingRef.current) return
+    const micId = searchParams.get('mic')
+    const name = searchParams.get('name')
+    if (!micId || !name) return
+    prefilledFromListingRef.current = true
+
+    const cityParam = searchParams.get('city') ?? ''
+    const stateParam = searchParams.get('state') ?? ''
+
+    setFormData((prev) => ({
+      ...prev,
+      name,
+      ...(cityParam ? { city: cityParam } : {}),
+      ...(stateParam ? { state: stateParam } : {}),
+      notes: [
+        'LISTING UPDATE REQUEST (from Find Open Mics)',
+        `Open mic ID: ${micId}`,
+        `Listing: ${name}${cityParam ? `, ${cityParam}` : ''}${stateParam ? `, ${stateParam}` : ''}`,
+        '',
+        'What changed? (e.g. cancelled, new day/time, venue closed):',
+        '',
+      ].join('\n'),
+    }))
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -514,6 +544,24 @@ export default function SubmitOpenMicPage() {
       </main>
       <Footer />
     </>
+  )
+}
+
+export default function SubmitOpenMicPage() {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <Header />
+          <main className="min-h-screen bg-[#0D0016] pt-32 pb-20 px-4 flex items-center justify-center">
+            <p className="text-[#A0A0A0]">Loading...</p>
+          </main>
+          <Footer />
+        </>
+      }
+    >
+      <SubmitOpenMicPageContent />
+    </Suspense>
   )
 }
 

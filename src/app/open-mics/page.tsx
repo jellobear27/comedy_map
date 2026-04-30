@@ -9,6 +9,7 @@ import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import { US_STATES } from '@/types'
+import { FEATURES } from '@/config/features'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -490,8 +491,21 @@ export default function OpenMicsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end pt-4 border-t border-[#7B2FF7]/20">
-                  <div className="flex items-center gap-2 text-sm">
+                <div
+                  className={`flex items-center pt-4 border-t border-[#7B2FF7]/20 gap-3 ${
+                    FEATURES.submitOpenMic ? 'justify-between' : 'justify-end'
+                  }`}
+                >
+                  {FEATURES.submitOpenMic && (
+                    <Link
+                      href={`/submit-open-mic?mic=${encodeURIComponent(mic.id)}&name=${encodeURIComponent(mic.name)}&city=${encodeURIComponent(mic.city)}&state=${encodeURIComponent(mic.state)}#listing-changes`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs text-[#F72585]/90 hover:text-[#F72585] hover:underline shrink-0 text-left leading-snug max-w-[55%]"
+                    >
+                      Cancel or update listing
+                    </Link>
+                  )}
+                  <div className="flex items-center gap-2 text-sm shrink-0">
                     <Clock className="w-4 h-4 text-[#A0A0A0]" />
                     <span className="text-[#A0A0A0]">{mic.time_per_comic || 5} min set</span>
                   </div>
