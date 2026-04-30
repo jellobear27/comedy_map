@@ -17,6 +17,7 @@ import {
   getAuthRoleHintFromClient,
   resolveAccountRoleWithHints,
   shouldPersistResolvedRole,
+  isAdminProfileRole,
   type AccountRole,
 } from '@/lib/account-role'
 import { 
@@ -255,8 +256,19 @@ export default function ProfileEditPage() {
         }
       }
 
-      const dbRole: 'comedian' | 'superfan' | 'venue' =
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      let dbRole: string =
         role === 'superfan' ? 'superfan' : role === 'venue' ? 'venue' : 'comedian'
+
+      // Admin is set only in the DB (moderators); Edit Profile has no admin toggle — preserve it on save.
+      if (isAdminProfileRole(existingProfile?.role)) {
+        dbRole = 'admin'
+      }
 
       // Update base profile (persist role so DB matches signup / UI)
       const { error: profileError } = await supabase
